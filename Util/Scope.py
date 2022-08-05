@@ -1,6 +1,7 @@
 from typing import Optional
-from Util.Error import Error
+from Util.Error import ERRORS_, Error
 from Util.Retorno import Type
+from Util.Struct import Struct
 from Util.Symbol import SYMBOLS, ReportSymbol, Symbol
 
 
@@ -64,3 +65,26 @@ class Scope:
         scope = self
         scope.variables[id] = Symbol(id, mut, value, type)
         SYMBOLS.append(ReportSymbol(id, scope.name, type, "Variable", line, col))
+
+    def saveStruct(self, name: str, items: dict, line: int, col: int):
+        if name not in self.structs:
+            self.structs[name] = items
+        else:
+            err = Error(
+                line,
+                col,
+                f"La estructura {name} ya existe.",
+                self.name,
+            )
+            ERRORS_.append(err)
+            raise Exception(err)
+
+    def getStruct(self, name: str) -> Struct:
+        scope = self
+        while True:
+            if scope.structs.get(name) != None:
+                return scope.structs.get(name)
+            scope = scope.anterior
+            if scope == None:
+                break
+        return None

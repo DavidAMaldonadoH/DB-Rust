@@ -69,6 +69,7 @@ reserved = {
     "continue": "RCONTINUE",
     "return": "RRETURN",
     "_": "UNDERSCORE",
+    "struct": "RSTRUCT",
 }
 
 tokens += list(reserved.values())

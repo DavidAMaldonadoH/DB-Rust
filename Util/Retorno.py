@@ -62,3 +62,12 @@ class Retorno:
 
     def showInfo(self):
         print(f"Value: {self.value}\nType: {self.type}")
+
+
+def getNestedType(nested_type: dict, is_struct: bool) -> str:
+    if isinstance(nested_type["type"], dict):
+        return f"{nested_type['size']}*" + getNestedType(nested_type["type"], is_struct)
+    else:
+        if is_struct:
+            return f"{nested_type['size']}*" + nested_type["type"]
+        return f"{nested_type['size']}*{nested_type['type'].fullname}"

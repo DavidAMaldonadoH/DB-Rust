@@ -2,7 +2,7 @@ from Util.Error import ERRORS_, Error
 from Util.Expression import Expression
 from typing import Optional
 from Util.Instruction import Instruction
-from Util.Retorno import Type
+from Util.Retorno import Type, getNestedType
 from Util.Scope import Scope
 
 
@@ -24,12 +24,6 @@ class Declaration(Instruction):
         self.value = value
         self.type = type
 
-    def getNestedType(self, nested_type: dict) -> str:
-        if isinstance(nested_type["type"], dict):
-            return f"{nested_type['size']}*" + self.getNestedType(nested_type["type"])
-        else:
-            return f"{nested_type['size']}*{nested_type['type'].fullname}"
-
     def execute(self, scope: Scope) -> any:
         exists = scope.variables.get(self.id)
         if exists == None:
@@ -43,10 +37,10 @@ class Declaration(Instruction):
                     if self.type == Type.Usize and value_.getType() == Type.Int:
                         value_.type = Type.Usize
                     if value_.getType() == Type.Array:
-                        if (
-                            self.getNestedType(self.type)
-                            == value_.getValue().getNestedType()
-                        ):
+                        is_struct = value_.value.type == Type.Struct
+                        left_type = getNestedType(self.type, is_struct)
+                        right_type = value_.getValue().getNestedType()
+                        if left_type == right_type:
                             scope.saveVar(
                                 self.id,
                                 self.mut,
@@ -60,6 +54,25 @@ class Declaration(Instruction):
                                 self.line,
                                 self.column,
                                 "Array type mismatch",
+                                scope.name,
+                            )
+                            ERRORS_.append(err)
+                            raise Exception(err)
+                    elif value_.getType() == Type.Struct:
+                        if value_.getValue().name == self.type:
+                            scope.saveVar(
+                                self.id,
+                                self.mut,
+                                value_.getValue(),
+                                Type.Struct,
+                                self.line,
+                                self.column,
+                            )
+                        else:
+                            err = Error(
+                                self.line,
+                                self.column,
+                                "Struct type mismatch",
                                 scope.name,
                             )
                             ERRORS_.append(err)

@@ -16,6 +16,8 @@ class Array:
         if self.type == Type.Array:
             return str(self.size) + "*" + self.data[0].getValue().getNestedType()
         else:
+            if self.type == Type.Struct:
+                return str(self.size) + "*" + self.data[0].getValue().name
             return str(self.size) + "*" + self.type.fullname
 
     def getValue(self, index: int) -> Symbol:

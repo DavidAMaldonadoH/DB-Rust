@@ -8,6 +8,7 @@ from Expression.CaseExpr import CaseExpr
 from Expression.Cast import Cast
 from Expression.Clone import Clone
 from Expression.CreateArray import CreateArray
+from Expression.CreateStruct import CreateStruct
 from Expression.DefaultExpr import DefaultExpr
 from Expression.IfExpr import IfExpr
 from Expression.Literal import Literal
@@ -15,6 +16,7 @@ from Expression.Logic import Logic
 from Expression.Relational import Relational
 from Expression.SimpleAccess import SimpleAccess
 from Expression.Sqrt import Sqrt
+from Expression.StructAccess import StructAccess
 from Expression.ToString import ToString
 from Instruction.Asignation import Asignation
 from Instruction.Break import Break
@@ -25,11 +27,11 @@ from Instruction.Default import Default
 from Instruction.If import If
 from Instruction.Loop import Loop
 from Instruction.Match import Match
+from Instruction.NewStruct import NewStruct
 from Instruction.Println import Println
 from Instruction.Return import Return
 from Instruction.Statement import Statement
 from Instruction.While import While
-from Util.Array import Array
 from Util.Expression import Expression
 from Util.Retorno import ArithmeticType, LogicType, RelationalType, Type
 
@@ -42,7 +44,7 @@ precedence = (
     ("left", "TIMES", "DIVIDE", "MODULE"),
     ("nonassoc", "POWER"),
     ("right", "RAS"),
-    ("right", "UMINUS", "NOT"),  # Unary minus operator
+    ("right", "UMINUS", "NOT"),
     ("left", "DOT"),
 )
 
@@ -71,6 +73,7 @@ def p_instr(p):
     | match
     | while
     | loop
+    | struct_st
     | break SEMICOLON
     | continue SEMICOLON
     | return SEMICOLON"""
@@ -112,12 +115,9 @@ def p_primitive_type(p):
 
 
 def p_array_type(p):
-    "array_type : LBRACKET primitive_type SEMICOLON INT RBRACKET"
-    p[0] = {"type": p[2], "size": p[4]}
-
-
-def p_array_type_arr(p):
-    "array_type : LBRACKET array_type SEMICOLON INT RBRACKET"
+    """array_type : LBRACKET primitive_type SEMICOLON INT RBRACKET
+    | LBRACKET array_type SEMICOLON INT RBRACKET
+    | LBRACKET ID SEMICOLON INT RBRACKET"""
     p[0] = {"type": p[2], "size": p[4]}
 
 
@@ -149,13 +149,15 @@ def p_declaration(p):
     p[0] = Declaration(p.lineno(1), p.lexpos(1), p[2], False, p[4], None)
 
 
-def p_declaration_array_mut(p):
-    "declaration : RLET RMUT ID COLON array_type EQUAL expression"
+def p_declaration_array_struct_mut(p):
+    """declaration : RLET RMUT ID COLON array_type EQUAL expression
+    | RLET RMUT ID COLON ID EQUAL expression"""
     p[0] = Declaration(p.lineno(1), p.lexpos(1), p[3], True, p[7], p[5])
 
 
-def p_declaration_array(p):
-    "declaration : RLET ID COLON array_type EQUAL expression"
+def p_declaration_array_struct(p):
+    """declaration : RLET ID COLON array_type EQUAL expression
+    | RLET ID COLON ID EQUAL expression"""
     p[0] = Declaration(p.lineno(1), p.lexpos(1), p[2], False, p[6], p[4])
 
 
@@ -346,6 +348,47 @@ def p_expressions_expression_match(p):
     p[0] = [p[1]]
 
 
+def p_struct_st(p):
+    "struct_st : RSTRUCT ID LCBRACKET items_2 RCBRACKET"
+    p[0] = NewStruct(p.lineno(1), p.lexpos(1), p[2], p[4])
+
+
+def p_items(p):
+    "items : items COMMA item"
+    p[0] = p[1]
+    p[0][p[3]["id"]] = p[3]["value"]
+
+
+def p_items_item(p):
+    "items : item"
+    p[0] = dict()
+    p[0][p[1]["id"]] = p[1]["value"]
+
+
+def p_item(p):
+    "item : ID COLON expression"
+    p[0] = {"id": p[1], "value": p[3]}
+
+
+def p_items_2(p):
+    "items_2 : items_2 COMMA item_2"
+    p[0] = p[1]
+    p[0][p[3]["id"]] = p[3]["type"]
+
+
+def p_items_2_item_2(p):
+    "items_2 : item_2"
+    p[0] = dict()
+    p[0][p[1]["id"]] = p[1]["type"]
+
+
+def p_item_2(p):
+    """item_2 : ID COLON primitive_type
+    | ID COLON array_type
+    | ID COLON ID"""
+    p[0] = {"id": p[1], "type": p[3]}
+
+
 def p_expression(p):
     """expression : expression PLUS expression
     | expression MINUS expression
@@ -448,6 +491,18 @@ def p_expr_tostr(p):
     p[0] = ToString(p.lineno(1), p.lexpos(1), p[1])
 
 
+def p_expr_struct(p):
+    "expression : ID LCBRACKET items RCBRACKET"
+    p[0] = CreateStruct(p.lineno(1), p.lexpos(1), p[1], p[3])
+
+
+def p_expr_selection(p):
+    """expression : if_expr
+    | match_expr
+    | loop"""
+    p[0] = p[1]
+
+
 def p_literal(p):
     """expression : INT
     | FLOAT
@@ -476,6 +531,11 @@ def p_access_array(p):
     p[0] = ArrayAccess(p.lineno(1), p.lexpos(1), p[1], p[3])
 
 
+def p_access_struct(p):
+    "expression : expression DOT ID"
+    p[0] = StructAccess(p.lineno(1), p.lexpos(1), p[1], p[3])
+
+
 def p_create_array(p):
     """expression : LBRACKET expression SEMICOLON INT RBRACKET
     | LBRACKET expressions RBRACKET"""
@@ -483,13 +543,6 @@ def p_create_array(p):
         p[0] = CreateArray(p.lineno(1), p.lexpos(1), None, p[2], p[4])
     else:
         p[0] = CreateArray(p.lineno(1), p.lexpos(1), p[2], None, 0)
-
-
-def p_expr_selection(p):
-    """expression : if_expr
-    | match_expr
-    | loop"""
-    p[0] = p[1]
 
 
 def p_empty(p):
