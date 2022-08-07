@@ -23,6 +23,9 @@ class Array:
     def getValue(self, index: int) -> Symbol:
         return self.data[index]
 
+    def getLen(self) -> int:
+        return self.size
+
     def appendValue(self, value: Symbol):
         if self.size == len(self.data):
             err = Error(self.line, self.column, "Array overflow", "Array")

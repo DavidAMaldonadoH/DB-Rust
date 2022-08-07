@@ -64,10 +64,22 @@ class Retorno:
         print(f"Value: {self.value}\nType: {self.type}")
 
 
-def getNestedType(nested_type: dict, is_struct: bool) -> str:
+def getNestedType(nested_type: dict) -> str:
     if isinstance(nested_type["type"], dict):
-        return f"{nested_type['size']}*" + getNestedType(nested_type["type"], is_struct)
+        if "size" in nested_type:
+            return f"{nested_type['size']}*" + getNestedType(
+                nested_type["type"]
+            )
+        else:
+            return f"vec<" + getNestedType(nested_type["type"]) + ">"
     else:
-        if is_struct:
-            return f"{nested_type['size']}*" + nested_type["type"]
-        return f"{nested_type['size']}*{nested_type['type'].fullname}"
+        if not isinstance(nested_type["type"], Type):
+            if "size" in nested_type:
+                return f"{nested_type['size']}*" + nested_type["type"]
+            else:
+                return "vec<" + nested_type["type"] + ">"
+        else:
+            if "size" in nested_type:
+                return f"{nested_type['size']}*{nested_type['type'].fullname}"
+            else:
+                return f"vec<{nested_type['type'].fullname}>"

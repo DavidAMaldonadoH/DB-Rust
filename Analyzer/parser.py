@@ -4,16 +4,21 @@ from Analyzer.scanner import tokens
 from Expression.Abs import Abs
 from Expression.Arithmetic import Arithmetic
 from Expression.ArrayAccess import ArrayAccess
+from Expression.Capacity import Capacity
 from Expression.CaseExpr import CaseExpr
 from Expression.Cast import Cast
 from Expression.Clone import Clone
+from Expression.Contains import Contains
 from Expression.CreateArray import CreateArray
 from Expression.CreateStruct import CreateStruct
+from Expression.CreateVector import CreateVector
 from Expression.DefaultExpr import DefaultExpr
 from Expression.IfExpr import IfExpr
+from Expression.Len import Len
 from Expression.Literal import Literal
 from Expression.Logic import Logic
 from Expression.Relational import Relational
+from Expression.Remove import Remove
 from Expression.SimpleAccess import SimpleAccess
 from Expression.Sqrt import Sqrt
 from Expression.StructAccess import StructAccess
@@ -117,11 +122,17 @@ def p_primitive_type(p):
 def p_array_type(p):
     """array_type : LBRACKET primitive_type SEMICOLON INT RBRACKET
     | LBRACKET array_type SEMICOLON INT RBRACKET
-    | LBRACKET ID SEMICOLON INT RBRACKET"""
+    | LBRACKET ID SEMICOLON INT RBRACKET
+    | LBRACKET vector_type SEMICOLON INT RBRACKET"""
     p[0] = {"type": p[2], "size": p[4]}
 
 
-# TODO: Implementar arrays de tipo struct y vector
+def p_vector_type(p):
+    """vector_type : RVECTOR LTHAN primitive_type GTHAN
+    | RVECTOR LTHAN ID GTHAN
+    | RVECTOR LTHAN array_type GTHAN
+    | RVECTOR LTHAN vector_type GTHAN"""
+    p[0] = {"type": p[3]}
 
 
 def p_statement(p):
@@ -151,13 +162,15 @@ def p_declaration(p):
 
 def p_declaration_array_struct_mut(p):
     """declaration : RLET RMUT ID COLON array_type EQUAL expression
-    | RLET RMUT ID COLON ID EQUAL expression"""
+    | RLET RMUT ID COLON ID EQUAL expression
+    | RLET RMUT ID COLON vector_type EQUAL expression"""
     p[0] = Declaration(p.lineno(1), p.lexpos(1), p[3], True, p[7], p[5])
 
 
 def p_declaration_array_struct(p):
     """declaration : RLET ID COLON array_type EQUAL expression
-    | RLET ID COLON ID EQUAL expression"""
+    | RLET ID COLON ID EQUAL expression
+    | RLET ID COLON vector_type EQUAL expression"""
     p[0] = Declaration(p.lineno(1), p.lexpos(1), p[2], False, p[6], p[4])
 
 
@@ -385,7 +398,8 @@ def p_items_2_item_2(p):
 def p_item_2(p):
     """item_2 : ID COLON primitive_type
     | ID COLON array_type
-    | ID COLON ID"""
+    | ID COLON ID
+    | ID COLON vector_type"""
     p[0] = {"id": p[1], "type": p[3]}
 
 
@@ -543,6 +557,39 @@ def p_create_array(p):
         p[0] = CreateArray(p.lineno(1), p.lexpos(1), None, p[2], p[4])
     else:
         p[0] = CreateArray(p.lineno(1), p.lexpos(1), p[2], None, 0)
+
+
+def p_create_vector(p):
+    """expression : RVEC NOT LBRACKET expression SEMICOLON expression RBRACKET
+    | RVEC NOT LBRACKET expressions RBRACKET"""
+    if isinstance(p[4], Expression):
+        p[0] = CreateVector(p.lineno(1), p.lexpos(1), None, p[4], p[6], False)
+    else:
+        p[0] = CreateVector(p.lineno(1), p.lexpos(1), p[4], None, 0, False)
+
+
+def p_create_vector_2(p):
+    """expression : RVECTOR DCOLON RNEW LPAREN RPAREN
+    | RVECTOR DCOLON RWITH_CAPACITY LPAREN expression RPAREN"""
+    if p[3] == "new":
+        p[0] = CreateVector(p.lineno(1), p.lexpos(1), None, None, None, True)
+    else:
+        p[0] = CreateVector(p.lineno(1), p.lexpos(1), None, None, p[5], False)
+
+
+def p_exprs_vector(p):
+    """expression : expression DOT RLEN LPAREN RPAREN
+    | expression DOT RCAPACITY LPAREN RPAREN
+    | expression DOT RREMOVE LPAREN expression RPAREN
+    | expression DOT RCONTAINS LPAREN AMPERSAND expression RPAREN"""
+    if p[3] == "len":
+        p[0] = Len(p.lineno(1), p.lexpos(1), p[1])
+    elif p[3] == "capacity":
+        p[0] = Capacity(p.lineno(1), p.lexpos(1), p[1])
+    elif p[3] == "remove":
+        p[0] = Remove(p.lineno(1), p.lexpos(1), p[1], p[5])
+    else:
+        p[0] = Contains(p.lineno(1), p.lexpos(1), p[1], p[6])
 
 
 def p_empty(p):

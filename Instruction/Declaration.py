@@ -36,9 +36,40 @@ class Declaration(Instruction):
                 if self.type != None:
                     if self.type == Type.Usize and value_.getType() == Type.Int:
                         value_.type = Type.Usize
-                    if value_.getType() == Type.Array:
-                        is_struct = value_.value.type == Type.Struct
-                        left_type = getNestedType(self.type, is_struct)
+                    if value_.getType() == Type.Vector:
+                        if value_.getValue().type == Type.Null:
+                            value_.getValue().type = self.type
+                            scope.saveVar(
+                                self.id,
+                                self.mut,
+                                value_.getValue(),
+                                Type.Vector,
+                                self.line,
+                                self.column,
+                            )
+                        else:
+                            left_type = getNestedType(self.type)
+                            right_type = value_.getValue().getNestedType()
+                            if left_type == right_type:
+                                scope.saveVar(
+                                    self.id,
+                                    self.mut,
+                                    value_.getValue(),
+                                    Type.Vector,
+                                    self.line,
+                                    self.column,
+                                )
+                            else:
+                                err = Error(
+                                    self.line,
+                                    self.column,
+                                    "Array type mismatch",
+                                    scope.name,
+                                )
+                                ERRORS_.append(err)
+                                raise Exception(err)
+                    elif value_.getType() == Type.Array:
+                        left_type = getNestedType(self.type)
                         right_type = value_.getValue().getNestedType()
                         if left_type == right_type:
                             scope.saveVar(
@@ -96,6 +127,18 @@ class Declaration(Instruction):
                         ERRORS_.append(err)
                         raise Exception(err)
                 else:
+                    if (
+                        value_.getType() == Type.Vector
+                        and value_.getValue().type == Type.Null
+                    ):
+                        err = Error(
+                            self.line,
+                            self.column,
+                            "Se debe declarar el tipo para `Vec<T>`",
+                            scope.name,
+                        )
+                        ERRORS_.append(err)
+                        raise Exception(err)
                     scope.saveVar(
                         self.id,
                         self.mut,

@@ -32,7 +32,7 @@ class Println(Instruction):
                         ):
                             result = str(values_[i + 1].getValue())
                         else:
-                            pass  # TODO: Implementar vector y array
+                            result = self.printLists(values_[i + 1])
                         output += field + result
                     else:
                         output += field
@@ -67,3 +67,31 @@ class Println(Instruction):
                 )
                 ERRORS_.append(err)
                 raise Exception(err)
+
+    def printLists(self, var: any) -> str:
+        output = ""
+        if var.getType() == Type.Array or var.getType() == Type.Vector:
+            output += "["
+            for i, val in enumerate(var.value.data):
+                if val.getType() == Type.Array or val.getType() == Type.Vector:
+                    if i != len(var.value.data) - 1:
+                        output += self.printLists(val) + ", "
+                    else:
+                        output += self.printLists(val)
+                else:
+                    if i != len(var.value.data) - 1:
+                        if val.getType() == Type.Str:
+                            output += '"' + str(val.getValue()) + '", '
+                        elif val.getType() == Type.Bool:
+                            output += str(val.getValue()).lower() + ", "
+                        else:
+                            output += str(val.getValue()) + ", "
+                    else:
+                        if val.getType() == Type.Str:
+                            output += '"' + val.getValue() + '"'
+                        elif val.getType() == Type.Bool:
+                            output += str(val.getValue()).lower()
+                        else:
+                            output += str(val.getValue())
+            output += "]"
+        return output

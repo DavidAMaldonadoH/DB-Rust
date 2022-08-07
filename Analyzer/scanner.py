@@ -70,6 +70,14 @@ reserved = {
     "return": "RRETURN",
     "_": "UNDERSCORE",
     "struct": "RSTRUCT",
+    "vec": "RVEC",
+    "Vec": "RVECTOR",
+    "new": "RNEW",
+    "with_capacity": "RWITH_CAPACITY",
+    "len": "RLEN",
+    "capacity": "RCAPACITY",
+    "remove": "RREMOVE",
+    "contains": "RCONTAINS",
 }
 
 tokens += list(reserved.values())

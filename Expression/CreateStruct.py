@@ -32,9 +32,8 @@ class CreateStruct(Expression):
                             )
                             ERRORS_.append(err)
                             raise Exception(err)
-                    elif val.type == Type.Array:
-                        is_struct = val.value.type == Type.Struct
-                        left_type = getNestedType(struct_base[key].type, is_struct)
+                    elif val.type == Type.Array or val.type == Type.Vector:
+                        left_type = getNestedType(struct_base[key].type)
                         right_type = val.getValue().getNestedType()
                         if left_type == right_type:
                             sym = Symbol(key, True, val.value, val.type)
@@ -48,7 +47,6 @@ class CreateStruct(Expression):
                             )
                             ERRORS_.append(err)
                             raise Exception(err)
-                    # TODO: revisar tipo vector
                     elif struct_base[key].type == val.type:
                         sym = Symbol(key, True, val.value, val.type)
                         struct[key] = sym
