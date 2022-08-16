@@ -17,6 +17,7 @@ from Expression.IfExpr import IfExpr
 from Expression.Len import Len
 from Expression.Literal import Literal
 from Expression.Logic import Logic
+from Expression.Reference import Reference
 from Expression.Relational import Relational
 from Expression.Remove import Remove
 from Expression.SimpleAccess import SimpleAccess
@@ -29,6 +30,7 @@ from Instruction.Case import Case
 from Instruction.Continue import Continue
 from Instruction.Declaration import Declaration
 from Instruction.Default import Default
+from Instruction.For import For
 from Instruction.If import If
 from Instruction.Loop import Loop
 from Instruction.Match import Match
@@ -48,9 +50,10 @@ precedence = (
     ("left", "PLUS", "MINUS"),
     ("left", "TIMES", "DIVIDE", "MODULE"),
     ("nonassoc", "POWER"),
-    ("right", "RAS"),
-    ("right", "UMINUS", "NOT"),
-    ("left", "DOT"),
+    ("right", "RAS", "CREATION"),
+    ("nonassoc", "ID_ACCESS"),
+    ("right", "UMINUS", "NOT", "AMPERSAND"),
+    ("left", "DOT", "PARENS", "LBRACKET"),
 )
 
 
@@ -78,6 +81,7 @@ def p_instr(p):
     | match
     | while
     | loop
+    | for
     | struct_st
     | break SEMICOLON
     | continue SEMICOLON
@@ -136,8 +140,12 @@ def p_vector_type(p):
 
 
 def p_statement(p):
-    "statement : LCBRACKET instructions RCBRACKET"
-    p[0] = Statement(p.lineno(1), p.lexpos(1), p[2])
+    """statement : LCBRACKET instructions RCBRACKET
+    | LCBRACKET RCBRACKET"""
+    if p[2] != "}":
+        p[0] = Statement(p.lineno(1), p.lexpos(1), p[2])
+    else:
+        p[0] = Statement(p.lineno(1), p.lexpos(1), [])
 
 
 def p_declaration_mut_type(p):
@@ -314,6 +322,15 @@ def p_loop(p):
     p[0] = Loop(p.lineno(1), p.lexpos(1), p[2])
 
 
+def p_for_range(p):
+    """for : RFOR ID RIN expression DOT DOT expression statement
+    | RFOR ID RIN expression statement"""
+    if p[5] == ".":
+        p[0] = For(p.lineno(1), p.lexpos(1), p[2], p[4], p[7], p[8])
+    else:
+        p[0] = For(p.lineno(1), p.lexpos(1), p[2], p[4], None, p[5])
+
+
 def p_break(p):
     "break : RBREAK"
     p[0] = Break(p.lineno(1), p.lexpos(1), None)
@@ -441,7 +458,7 @@ def p_expr_uminus(p):
 
 
 def p_expr_par(p):
-    "expression : LPAREN expression RPAREN"
+    "expression : LPAREN expression RPAREN %prec PARENS"
     p[0] = p[2]
 
 
@@ -462,7 +479,7 @@ def p_expr_clone(p):
 def p_expr_logic(p):
     """expression : expression AND expression
     | expression OR expression
-    | NOT expression %prec NOT"""
+    | NOT expression"""
     if p[2] == "||":
         p[0] = Logic(p.lineno(1), p.lexpos(1), p[1], p[3], LogicType.Or)
     elif p[2] == "&&":
@@ -506,7 +523,7 @@ def p_expr_tostr(p):
 
 
 def p_expr_struct(p):
-    "expression : ID LCBRACKET items RCBRACKET"
+    "expression : ID LCBRACKET items RCBRACKET %prec CREATION"
     p[0] = CreateStruct(p.lineno(1), p.lexpos(1), p[1], p[3])
 
 
@@ -535,8 +552,12 @@ def p_false(p):
     p[0] = Literal(p.lineno(1), p.lexpos(1), False)
 
 
+def p_reference(p):
+    "expression : AMPERSAND expression"
+    p[0] = Reference(p.lineno(1), p.lexpos(1), p[2])
+
 def p_access(p):
-    "expression : ID"
+    "expression : ID %prec ID_ACCESS"
     p[0] = SimpleAccess(p.lineno(1), p.lexpos(1), p[1])
 
 
@@ -581,7 +602,7 @@ def p_exprs_vector(p):
     """expression : expression DOT RLEN LPAREN RPAREN
     | expression DOT RCAPACITY LPAREN RPAREN
     | expression DOT RREMOVE LPAREN expression RPAREN
-    | expression DOT RCONTAINS LPAREN AMPERSAND expression RPAREN"""
+    | expression DOT RCONTAINS LPAREN expression RPAREN"""
     if p[3] == "len":
         p[0] = Len(p.lineno(1), p.lexpos(1), p[1])
     elif p[3] == "capacity":
@@ -589,7 +610,7 @@ def p_exprs_vector(p):
     elif p[3] == "remove":
         p[0] = Remove(p.lineno(1), p.lexpos(1), p[1], p[5])
     else:
-        p[0] = Contains(p.lineno(1), p.lexpos(1), p[1], p[6])
+        p[0] = Contains(p.lineno(1), p.lexpos(1), p[1], p[5])
 
 
 def p_empty(p):

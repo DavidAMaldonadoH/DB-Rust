@@ -65,6 +65,8 @@ reserved = {
     "match": "RMATCH",
     "while": "RWHILE",
     "loop": "RLOOP",
+    "for": "RFOR",
+    "in": "RIN",
     "break": "RBREAK",
     "continue": "RCONTINUE",
     "return": "RRETURN",
