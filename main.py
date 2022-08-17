@@ -2,6 +2,9 @@ import sys
 from PyQt5 import QtGui
 from PyQt5.QtWidgets import *
 from Analyzer.parser import parser
+from Instruction.FunctionDeclaration import FunctionDeclaration
+from Instruction.FunctionCall import FunctionCall
+from Instruction.NewStruct import NewStruct
 from Instruction.Println import CONSOLE_CONTENT
 from Util.Error import ERRORS_
 from Util.Scope import Scope
@@ -32,17 +35,17 @@ class MainWindow(QMainWindow):
         SYMBOLS.clear()
         ERRORS_.clear()
         if input != "":
-            g_scope = Scope(None, "Global")
-            # try:
             ast = parser.parse(input, tracking=True)
+            g_scope = Scope(None, "Global")
             for node in ast:
-                x = node.execute(g_scope)
+                if isinstance(node, FunctionDeclaration):
+                    node.execute(g_scope)
+                elif isinstance(node, NewStruct):
+                    node.execute(g_scope)
+            main = FunctionCall(0, 0, "main", [])
+            main.execute(g_scope)
             for output in CONSOLE_CONTENT:
                 self.ui.console.append(f"$ {output}")
-            # except Exception as err:
-            #     self.ui.console.append(f"{err}")
-            #     msg = f"\033[91m{err}\033[0m"
-            #     print(msg)
         else:
             self.ui.console.append(f"$ Aún no ha ingresado código para analizar!")
 

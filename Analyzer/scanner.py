@@ -80,6 +80,7 @@ reserved = {
     "capacity": "RCAPACITY",
     "remove": "RREMOVE",
     "contains": "RCONTAINS",
+    "fn": "RFN",
 }
 
 tokens += list(reserved.values())

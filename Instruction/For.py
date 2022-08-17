@@ -37,6 +37,7 @@ class For(Instruction):
                     self.column,
                 )
                 var = for_scope.getVar(self.id)
+                self.code.name = "For"
                 while var.getValue() < end_expr.getValue():
                     retorno = self.code.execute(for_scope)
                     if retorno is not None:
@@ -68,6 +69,7 @@ class For(Instruction):
                 self.column,
             )
             var = for_scope.getVar(self.id)
+            self.code.name = "For"
             index = 0
             while index < len(start_expr.getValue().data):
                 var.value = start_expr.getValue().data[index].value

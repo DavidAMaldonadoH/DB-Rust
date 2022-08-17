@@ -24,16 +24,18 @@ from Expression.SimpleAccess import SimpleAccess
 from Expression.Sqrt import Sqrt
 from Expression.StructAccess import StructAccess
 from Expression.ToString import ToString
-from Instruction.Asignation import Asignation
+from Instruction.Assignation import Assignation
 from Instruction.Break import Break
 from Instruction.Case import Case
 from Instruction.Continue import Continue
 from Instruction.Declaration import Declaration
 from Instruction.Default import Default
 from Instruction.For import For
+from Instruction.FunctionDeclaration import FunctionDeclaration
 from Instruction.If import If
 from Instruction.Loop import Loop
 from Instruction.Match import Match
+from Instruction.NestedAssignation import NestedAssignation
 from Instruction.NewStruct import NewStruct
 from Instruction.Println import Println
 from Instruction.Return import Return
@@ -51,9 +53,9 @@ precedence = (
     ("left", "TIMES", "DIVIDE", "MODULE"),
     ("nonassoc", "POWER"),
     ("right", "RAS", "CREATION"),
-    ("nonassoc", "ID_ACCESS"),
+    ("right", "ID_ACCESS"),
     ("right", "UMINUS", "NOT", "AMPERSAND"),
-    ("left", "DOT", "PARENS", "LBRACKET"),
+    ("left", "DOT", "LPAREN", "LBRACKET"),
 )
 
 
@@ -85,7 +87,8 @@ def p_instr(p):
     | struct_st
     | break SEMICOLON
     | continue SEMICOLON
-    | return SEMICOLON"""
+    | return SEMICOLON
+    | function"""
     p[0] = p[1]
 
 
@@ -188,8 +191,31 @@ def p_println(p):
 
 
 def p_asignation(p):
-    """asignation : ID EQUAL expression"""
-    p[0] = Asignation(p.lineno(1), p.lexpos(1), p[1], p[3])
+    "asignation : ID EQUAL expression"
+    p[0] = Assignation(p.lineno(1), p.lexpos(1), p[1], p[3])
+
+
+def p_nested_asignation(p):
+    "asignation : nested_var EQUAL expression"
+    p[0] = NestedAssignation(p.lineno(1), p.lexpos(1), p[1], p[3])
+
+
+def p_nested_var(p):
+    """nested_var : nested_var DOT ID
+    | nested_var LBRACKET expression RBRACKET"""
+    p[1].append(p[3])
+    p[0] = p[1]
+
+
+def p_nested_var_id(p):
+    """nested_var : ID DOT ID
+    | ID LBRACKET expression RBRACKET"""
+    p[0] = [p[1], p[3]]
+
+
+def p_function(p):
+    """function : RFN ID LPAREN RPAREN statement"""
+    p[0] = FunctionDeclaration(p.lineno(1), p.lexpos(1), p[2], [], p[5])
 
 
 def p_ifst(p):
@@ -458,7 +484,7 @@ def p_expr_uminus(p):
 
 
 def p_expr_par(p):
-    "expression : LPAREN expression RPAREN %prec PARENS"
+    "expression : LPAREN expression RPAREN"
     p[0] = p[2]
 
 
@@ -555,6 +581,7 @@ def p_false(p):
 def p_reference(p):
     "expression : AMPERSAND expression"
     p[0] = Reference(p.lineno(1), p.lexpos(1), p[2])
+
 
 def p_access(p):
     "expression : ID %prec ID_ACCESS"

@@ -4,7 +4,7 @@ from Util.Instruction import Instruction
 from Util.Scope import Scope
 
 
-class Asignation(Instruction):
+class Assignation(Instruction):
     def __init__(self, line: int, column: int, id: str, value: Expression):
         super().__init__(line, column)
         self.id = id
