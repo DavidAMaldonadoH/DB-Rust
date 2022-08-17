@@ -34,6 +34,8 @@ class Declaration(Instruction):
             else:
                 value_ = self.value.execute(scope)
                 if self.type != None:
+                    if isinstance(value_, dict):
+                        value_ = value_["value"]
                     if self.type == Type.Usize and value_.getType() == Type.Int:
                         value_.type = Type.Usize
                     if value_.getType() == Type.Vector:
@@ -127,6 +129,8 @@ class Declaration(Instruction):
                         ERRORS_.append(err)
                         raise Exception(err)
                 else:
+                    if isinstance(value_, dict):
+                        value_ = value_["value"]
                     if (
                         value_.getType() == Type.Vector
                         and value_.getValue().type == Type.Null

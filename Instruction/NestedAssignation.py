@@ -14,7 +14,7 @@ class NestedAssignation(Instruction):
     def execute(self, scope: Scope) -> any:
         actual_var = scope.getVar(self.vars[0])
         if actual_var is not None:
-            val = self.value.execute(scope)
+            value_ = self.value.execute(scope)
             if actual_var.isMutable():
                 for i in range(1, len(self.vars) - 1):
                     if isinstance(self.vars[i], Expression):
@@ -42,7 +42,9 @@ class NestedAssignation(Instruction):
                             actual_var.type == Type.Array
                             or actual_var.type == Type.Vector
                         ):
-                            actual_var.value.setValue(index.value, val.value)
+                            if isinstance(value_, dict):
+                                value_ = value_["value"]
+                            actual_var.value.setValue(index.value, value_.value)
                         else:
                             err = Error(
                                 self.line,
@@ -52,7 +54,9 @@ class NestedAssignation(Instruction):
                             )
                             ERRORS_.append(err)
                 else:
-                    actual_var.value[self.vars[-1]].value = val.value
+                    if isinstance(value_, dict):
+                        value_ = value_["value"]
+                    actual_var.value[self.vars[-1]].value = value_.value
             else:
                 err = Error(
                     self.line,

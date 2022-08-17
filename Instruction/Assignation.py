@@ -15,6 +15,8 @@ class Assignation(Instruction):
         if var != None:
             value_ = self.value.execute(scope)
             if var.isMutable():
+                if isinstance(value_, dict):
+                    value_ = value_["value"]
                 if var.getType() == value_.getType():
                     var.value = value_.getValue()
                 else:

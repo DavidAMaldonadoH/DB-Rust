@@ -5,15 +5,12 @@ from Expression.Abs import Abs
 from Expression.Arithmetic import Arithmetic
 from Expression.ArrayAccess import ArrayAccess
 from Expression.Capacity import Capacity
-from Expression.CaseExpr import CaseExpr
 from Expression.Cast import Cast
 from Expression.Clone import Clone
 from Expression.Contains import Contains
 from Expression.CreateArray import CreateArray
 from Expression.CreateStruct import CreateStruct
 from Expression.CreateVector import CreateVector
-from Expression.DefaultExpr import DefaultExpr
-from Expression.IfExpr import IfExpr
 from Expression.Len import Len
 from Expression.Literal import Literal
 from Expression.Logic import Logic
@@ -151,6 +148,11 @@ def p_statement(p):
         p[0] = Statement(p.lineno(1), p.lexpos(1), [])
 
 
+def p_statement_2(p):
+    "statement : LCBRACKET simple_instr RCBRACKET"
+    p[0] = Statement(p.lineno(1), p.lexpos(1), [p[2]])
+
+
 def p_declaration_mut_type(p):
     """declaration : RLET RMUT ID COLON primitive_type EQUAL expression"""
     p[0] = Declaration(p.lineno(1), p.lexpos(1), p[3], True, p[7], p[5])
@@ -233,33 +235,6 @@ def p_else_st(p):
         p[0] = None
 
 
-def p_ifst_expr(p):
-    "if_expr : RIF expression LCBRACKET instructions expression RCBRACKET else_st_expr"
-    p[0] = IfExpr(p.lineno(1), p.lexpos(1), p[2], p[4], p[5], p[7])
-
-
-def p_ifst_expr_2(p):
-    "if_expr : RIF expression LCBRACKET expression RCBRACKET else_st_expr"
-    p[0] = IfExpr(p.lineno(1), p.lexpos(1), p[2], None, p[4], p[6])
-
-
-def p_else_st_expr(p):
-    """else_st_expr : RELSE LCBRACKET instructions expression RCBRACKET
-    | RELSE LCBRACKET expression RCBRACKET
-    | RELSE if_expr
-    | empty"""
-    if p[1] == "else":
-        if p[2] == "{":
-            if isinstance(p[3], Expression):
-                p[0] = DefaultExpr(p.lineno(1), p.lexpos(1), None, p[3])
-            else:
-                p[0] = DefaultExpr(p.lineno(1), p.lexpos(1), p[3], p[4])
-        else:
-            p[0] = p[2]
-    else:
-        p[0] = None
-
-
 def p_match(p):
     "match : RMATCH expression LCBRACKET cases default RCBRACKET"
     p[0] = Match(p.lineno(1), p.lexpos(1), p[2], p[4], p[5])
@@ -288,52 +263,6 @@ def p_default(p):
     | empty"""
     if p[1] == "_":
         p[0] = Default(p.lineno(1), p.lexpos(1), p[3])
-    else:
-        p[0] = None
-
-
-def p_match_expr(p):
-    "match_expr : RMATCH expression LCBRACKET cases_expr default_expr RCBRACKET"
-    p[0] = Match(p.lineno(1), p.lexpos(1), p[2], p[4], p[5])
-
-
-def p_cases_expr(p):
-    "cases_expr : cases_expr case_expr"
-    p[1].append(p[2])
-    p[0] = p[1]
-
-
-def p_cases_case_expr(p):
-    "cases_expr : case_expr"
-    p[0] = [p[1]]
-
-
-def p_case_expr(p):
-    """case_expr : expressions_match ARROW expression COMMA
-    | expressions_match ARROW LCBRACKET expression RCBRACKET
-    | expressions_match ARROW LCBRACKET statement expression RCBRACKET"""
-    if p[3] == "{":
-        if isinstance(p[4], Statement):
-            p[0] = CaseExpr(p.lineno(1), p.lexpos(1), p[1], p[4], p[5])
-        else:
-            p[0] = CaseExpr(p.lineno(1), p.lexpos(1), p[1], None, p[4])
-    else:
-        p[0] = CaseExpr(p.lineno(1), p.lexpos(1), p[1], None, p[3])
-
-
-def p_default_expr(p):
-    """default_expr : UNDERSCORE ARROW expression COMMA
-    | UNDERSCORE ARROW LCBRACKET expression RCBRACKET
-    | UNDERSCORE ARROW LCBRACKET statement expression RCBRACKET
-    | empty"""
-    if p[1] == "_":
-        if p[3] == "{":
-            if isinstance(p[4], Statement):
-                p[0] = DefaultExpr(p.lineno(1), p.lexpos(1), None, p[4])
-            else:
-                p[0] = DefaultExpr(p.lineno(1), p.lexpos(1), p[4], p[5])
-        else:
-            p[0] = DefaultExpr(p.lineno(1), p.lexpos(1), None, p[3])
     else:
         p[0] = None
 
@@ -378,8 +307,12 @@ def p_return(p):
 
 
 def p_return_2(p):
-    "return : RRETURN expression"
-    p[0] = Return(p.lineno(1), p.lexpos(1), p[2])
+    """return : RRETURN expression
+    | expression"""
+    if p[1] == "return":
+        p[0] = Return(p.lineno(1), p.lexpos(1), p[2])
+    else:
+        p[0] = Return(p.lineno(1), p.lexpos(1), p[1])
 
 
 def p_expressions(p):
@@ -554,8 +487,8 @@ def p_expr_struct(p):
 
 
 def p_expr_selection(p):
-    """expression : if_expr
-    | match_expr
+    """expression : ifst
+    | match
     | loop"""
     p[0] = p[1]
 

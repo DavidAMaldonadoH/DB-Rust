@@ -1,7 +1,6 @@
 from Util.Error import ERRORS_, Error
 from Util.Expression import Expression
 from typing import Optional
-from Instruction.Statement import Statement
 from Util.Instruction import Instruction
 from Util.Retorno import Type
 from Util.Scope import Scope
