@@ -21,7 +21,6 @@ class Cast(Expression):
                     scope.name,
                 )
                 ERRORS_.append(err)
-                raise Exception(err)
             elif expr.getType() == Type.Char:
                 return Retorno(ord(expr.getValue()), Type.Int)
             else:
@@ -40,7 +39,6 @@ class Cast(Expression):
                     scope.name,
                 )
                 ERRORS_.append(err)
-                raise Exception(err)
             else:
                 return Retorno(float(expr.getValue()), Type.Float)
         elif self.type == Type.Bool:
@@ -54,7 +52,6 @@ class Cast(Expression):
                     scope.name,
                 )
                 ERRORS_.append(err)
-                raise Exception(err)
         elif self.type == Type.Char:
             if expr.getType() == Type.Int or expr.getType() == Type.Usize:
                 return Retorno(chr(expr.getValue()), Type.Char)
@@ -66,7 +63,6 @@ class Cast(Expression):
                     scope.name,
                 )
                 ERRORS_.append(err)
-                raise Exception(err)
         elif self.type == Type.Str:
             err = Error(
                 self.line,
@@ -75,7 +71,6 @@ class Cast(Expression):
                 scope.name,
             )
             ERRORS_.append(err)
-            raise Exception(err)
         elif self.type == Type.String:
             err = Error(
                 self.line,
@@ -84,7 +79,6 @@ class Cast(Expression):
                 scope.name,
             )
             ERRORS_.append(err)
-            raise Exception(err)
         elif self.type == Type.Usize:
             if expr.getType() == Type.Str or expr.getType() == Type.String:
                 err = Error(
@@ -94,7 +88,6 @@ class Cast(Expression):
                     scope.name,
                 )
                 ERRORS_.append(err)
-                raise Exception(err)
             elif expr.getType() == Type.Char:
                 return Retorno(ord(expr.getValue()), Type.Usize)
             else:
@@ -107,4 +100,3 @@ class Cast(Expression):
                 scope.name,
             )
             ERRORS_.append(err)
-            raise Exception(err)

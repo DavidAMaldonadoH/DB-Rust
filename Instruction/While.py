@@ -27,7 +27,6 @@ class While(Instruction):
                                 scope.name,
                             )
                             ERRORS_.append(err)
-                            raise Exception(err)
                         else:
                             break
                     elif retorno["type"] == "continue":
@@ -44,4 +43,3 @@ class While(Instruction):
                 scope.name,
             )
             ERRORS_.append(err)
-            raise Exception(err)

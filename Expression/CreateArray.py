@@ -44,7 +44,6 @@ class CreateArray(Expression):
                     scope.getName(),
                 )
                 ERRORS_.append(err)
-                raise Exception(err)
         else:
             var = self.expression.execute(scope)
             arr = Array(var.type, self.size)

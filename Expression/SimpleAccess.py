@@ -22,7 +22,6 @@ class SimpleAccess(Expression):
                     scope.name,
                 )
                 ERRORS_.append(err)
-                raise Exception(err)
         else:
             err = Error(
                 self.line,
@@ -31,4 +30,3 @@ class SimpleAccess(Expression):
                 scope.name,
             )
             ERRORS_.append(err)
-            raise Exception(err)

@@ -22,4 +22,3 @@ class Len(Expression):
                 scope.name,
             )
             ERRORS_.append(err)
-            raise Exception(err)

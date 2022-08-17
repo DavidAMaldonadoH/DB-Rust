@@ -25,5 +25,4 @@ class NewStruct(Instruction):
                     scope.name,
                 )
                 ERRORS_.append(err)
-                raise err
         scope.saveStruct(self.name, struct, self.line, self.column)

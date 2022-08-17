@@ -29,6 +29,7 @@ from Instruction.Declaration import Declaration
 from Instruction.Default import Default
 from Instruction.For import For
 from Instruction.FunctionDeclaration import FunctionDeclaration
+from Instruction.FunctionCall import FunctionCall
 from Instruction.If import If
 from Instruction.Loop import Loop
 from Instruction.Match import Match
@@ -82,6 +83,7 @@ def p_instr(p):
     | loop
     | for
     | struct_st
+    | function_call SEMICOLON
     | break SEMICOLON
     | continue SEMICOLON
     | return SEMICOLON
@@ -92,11 +94,15 @@ def p_instr(p):
 def p_simple_instr(p):
     """simple_instr : println
     | asignation
-    | declaration
     | break
     | continue
     | return"""
     p[0] = p[1]
+
+
+def p_simple_instr_2(p):
+    "simple_instr : empty"
+    p[0] = None
 
 
 def p_primitive_type(p):
@@ -140,17 +146,18 @@ def p_vector_type(p):
 
 
 def p_statement(p):
-    """statement : LCBRACKET instructions RCBRACKET
-    | LCBRACKET RCBRACKET"""
-    if p[2] != "}":
-        p[0] = Statement(p.lineno(1), p.lexpos(1), p[2])
-    else:
-        p[0] = Statement(p.lineno(1), p.lexpos(1), [])
+    "statement : LCBRACKET instructions simple_instr RCBRACKET"
+    if p[3] is not None:
+        p[2].append(p[3])
+    p[0] = Statement(p.lineno(1), p.lexpos(1), p[2])
 
 
 def p_statement_2(p):
     "statement : LCBRACKET simple_instr RCBRACKET"
-    p[0] = Statement(p.lineno(1), p.lexpos(1), [p[2]])
+    if p[2] is None:
+        p[0] = Statement(p.lineno(1), p.lexpos(1), [])
+    else:
+        p[0] = Statement(p.lineno(1), p.lexpos(1), [p[2]])
 
 
 def p_declaration_mut_type(p):
@@ -216,8 +223,48 @@ def p_nested_var_id(p):
 
 
 def p_function(p):
-    """function : RFN ID LPAREN RPAREN statement"""
-    p[0] = FunctionDeclaration(p.lineno(1), p.lexpos(1), p[2], [], p[5])
+    """function : RFN ID LPAREN RPAREN statement
+    | RFN ID LPAREN args RPAREN statement"""
+    if p[4] != ")":
+        p[0] = FunctionDeclaration(
+            p.lineno(1), p.lexpos(1), p[2], p[4], p[6], Type.Null
+        )
+    else:
+        p[0] = FunctionDeclaration(p.lineno(1), p.lexpos(1), p[2], [], p[5], Type.Null)
+
+
+def p_function_return(p):
+    """function : RFN ID LPAREN RPAREN ARROW2 primitive_type statement
+    | RFN ID LPAREN args RPAREN ARROW2 primitive_type statement"""
+    if p[4] != ")":
+        p[0] = FunctionDeclaration(p.lineno(1), p.lexpos(1), p[2], p[4], p[8], p[7])
+    else:
+        p[0] = FunctionDeclaration(p.lineno(1), p.lexpos(1), p[2], [], p[7], p[6])
+
+
+def p_function_call(p):
+    """function_call : ID LPAREN expressions RPAREN
+    | ID LPAREN RPAREN"""
+    if p[3] == ")":
+        p[0] = FunctionCall(p.lineno(1), p.lexpos(1), p[1], [])
+    else:
+        p[0] = FunctionCall(p.lineno(1), p.lexpos(1), p[1], p[3])
+
+
+def p_args_list(p):
+    "args : args COMMA arg"
+    p[1].append(p[3])
+    p[0] = p[1]
+
+
+def p_args_item(p):
+    "args : arg"
+    p[0] = [p[1]]
+
+
+def p_arg(p):
+    """arg : ID COLON primitive_type"""
+    p[0] = {"name": p[1], "type": p[3]}
 
 
 def p_ifst(p):
@@ -571,6 +618,15 @@ def p_exprs_vector(p):
         p[0] = Remove(p.lineno(1), p.lexpos(1), p[1], p[5])
     else:
         p[0] = Contains(p.lineno(1), p.lexpos(1), p[1], p[5])
+
+
+def p_expr_function(p):
+    """expression : ID LPAREN expressions RPAREN
+    | ID LPAREN RPAREN"""
+    if p[3] == ")":
+        p[0] = FunctionCall(p.lineno(1), p.lexpos(1), p[1], [])
+    else:
+        p[0] = FunctionCall(p.lineno(1), p.lexpos(1), p[1], p[3])
 
 
 def p_empty(p):

@@ -31,7 +31,6 @@ class CreateStruct(Expression):
                                 scope.getName(),
                             )
                             ERRORS_.append(err)
-                            raise Exception(err)
                     elif val.type == Type.Array or val.type == Type.Vector:
                         left_type = getNestedType(struct_base[key].type)
                         right_type = val.getValue().getNestedType()
@@ -46,7 +45,6 @@ class CreateStruct(Expression):
                                 scope.getName(),
                             )
                             ERRORS_.append(err)
-                            raise Exception(err)
                     elif struct_base[key].type == val.type:
                         sym = Symbol(key, True, val.value, val.type)
                         struct[key] = sym
@@ -58,7 +56,6 @@ class CreateStruct(Expression):
                             scope.name,
                         )
                         ERRORS_.append(err)
-                        raise Exception(err)
                 else:
                     err = Error(
                         self.line,
@@ -67,7 +64,6 @@ class CreateStruct(Expression):
                         scope.name,
                     )
                     ERRORS_.append(err)
-                    raise Exception(err)
             return Retorno(struct, Type.Struct)
         else:
             err = Error(
@@ -77,4 +73,3 @@ class CreateStruct(Expression):
                 scope.name,
             )
             ERRORS_.append(err)
-            raise Exception(err)

@@ -46,7 +46,6 @@ class CreateVector(Expression):
                     scope.getName(),
                 )
                 ERRORS_.append(err)
-                raise Exception(err)
         elif self.expression is not None and self.size is not None:
             var = self.expression.execute(scope)
             size = self.size.execute(scope)

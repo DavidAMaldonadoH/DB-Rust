@@ -45,7 +45,6 @@ class Arithmetic(Expression):
                 scope.name,
             )
             ERRORS_.append(err)
-            raise Exception(err)
 
     def addition(
         self, left_op: Retorno, right_op: Retorno, line: int, column: int, name: str
@@ -66,7 +65,6 @@ class Arithmetic(Expression):
                 name,
             )
             ERRORS_.append(err)
-            raise Exception(err)
 
     def subs(
         self, left_op: Retorno, right_op: Retorno, line: int, column: int, name: str
@@ -85,7 +83,6 @@ class Arithmetic(Expression):
                 name,
             )
             ERRORS_.append(err)
-            raise Exception(err)
 
     def mult(
         self, left_op: Retorno, right_op: Retorno, line: int, column: int, name: str
@@ -104,7 +101,6 @@ class Arithmetic(Expression):
                 name,
             )
             ERRORS_.append(err)
-            raise Exception(err)
 
     def division(
         self, left_op: Retorno, right_op: Retorno, line: int, column: int, name: str
@@ -117,7 +113,7 @@ class Arithmetic(Expression):
                 name,
             )
             ERRORS_.append(err)
-            raise Exception(err)
+            return Retorno(0, Type.Int)
         if left_op.getType() == Type.Int and right_op.getType() == Type.Int:
             return Retorno(int(left_op.getValue() / right_op.getValue()), Type.Int)
         elif left_op.getType() == Type.Float and right_op.getType() == Type.Float:
@@ -132,7 +128,6 @@ class Arithmetic(Expression):
                 name,
             )
             ERRORS_.append(err)
-            raise Exception(err)
 
     def power(
         self, left_op: Retorno, right_op: Retorno, line: int, column: int, name: str
@@ -147,7 +142,6 @@ class Arithmetic(Expression):
                 name,
             )
             ERRORS_.append(err)
-            raise Exception(err)
 
         if self.r_type == Type.Float and (
             left_op.getType() == Type.Int or right_op.getType() == Type.Int
@@ -159,7 +153,6 @@ class Arithmetic(Expression):
                 name,
             )
             ERRORS_.append(err)
-            raise Exception(err)
 
         if left_op.getType() == Type.Int and right_op.getType() == Type.Int:
             return Retorno(left_op.value ** right_op.value, Type.Int)
@@ -173,7 +166,6 @@ class Arithmetic(Expression):
                 name,
             )
             ERRORS_.append(err)
-            raise Exception(err)
 
     def mod(
         self, left_op: Retorno, right_op: Retorno, line: int, column: int, name: str
@@ -192,7 +184,6 @@ class Arithmetic(Expression):
                 name,
             )
             ERRORS_.append(err)
-            raise Exception(err)
 
     def unegation(
         self, right_op: Retorno, line: int, column: int, name: str
@@ -211,4 +202,3 @@ class Arithmetic(Expression):
                 name,
             )
             ERRORS_.append(err)
-            raise Exception(err)

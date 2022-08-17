@@ -25,7 +25,6 @@ class ArrayAccess(Expression):
                     scope.name,
                 )
                 ERRORS_.append(err)
-                raise err
         else:
             err = Error(
                 self.line,
@@ -34,4 +33,3 @@ class ArrayAccess(Expression):
                 scope.name,
             )
             ERRORS_.append(err)
-            raise err

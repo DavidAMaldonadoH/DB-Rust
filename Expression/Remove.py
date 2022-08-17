@@ -27,7 +27,6 @@ class Remove(Expression):
                     scope.name,
                 )
                 ERRORS_.append(err)
-                raise Exception(err)
         else:
             err = Error(
                 self.line,
@@ -37,4 +36,3 @@ class Remove(Expression):
                 scope.name,
             )
             ERRORS_.append(err)
-            raise Exception(err)

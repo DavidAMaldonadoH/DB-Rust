@@ -69,7 +69,6 @@ class Declaration(Instruction):
                                     scope.name,
                                 )
                                 ERRORS_.append(err)
-                                raise Exception(err)
                     elif value_.getType() == Type.Array:
                         left_type = getNestedType(self.type)
                         right_type = value_.getValue().getNestedType()
@@ -90,7 +89,6 @@ class Declaration(Instruction):
                                 scope.name,
                             )
                             ERRORS_.append(err)
-                            raise Exception(err)
                     elif value_.getType() == Type.Struct:
                         if value_.getValue().name == self.type:
                             scope.saveVar(
@@ -109,7 +107,6 @@ class Declaration(Instruction):
                                 scope.name,
                             )
                             ERRORS_.append(err)
-                            raise Exception(err)
                     elif value_.getType() == self.type:
                         scope.saveVar(
                             self.id,
@@ -127,7 +124,6 @@ class Declaration(Instruction):
                             scope.name,
                         )
                         ERRORS_.append(err)
-                        raise Exception(err)
                 else:
                     if isinstance(value_, dict):
                         value_ = value_["value"]
@@ -142,7 +138,6 @@ class Declaration(Instruction):
                             scope.name,
                         )
                         ERRORS_.append(err)
-                        raise Exception(err)
                     scope.saveVar(
                         self.id,
                         self.mut,
@@ -159,4 +154,3 @@ class Declaration(Instruction):
                 scope.name,
             )
             ERRORS_.append(err)
-            raise Exception(err)

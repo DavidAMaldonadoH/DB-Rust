@@ -43,7 +43,6 @@ class Relational(Expression):
                 scope.name,
             )
             ERRORS_.append(err)
-            raise Exception(err)
 
     def equals(
         self, left_op: Retorno, right_op: Retorno, line: int, column: int, name: str
@@ -70,7 +69,6 @@ class Relational(Expression):
                 name,
             )
             ERRORS_.append(err)
-            raise Exception(err)
 
     def notEquals(
         self, left_op: Retorno, right_op: Retorno, line: int, column: int, name: str
@@ -97,7 +95,6 @@ class Relational(Expression):
                 name,
             )
             ERRORS_.append(err)
-            raise Exception(err)
 
     def greater(
         self, left_op: Retorno, right_op: Retorno, line: int, column: int, name: str
@@ -124,7 +121,6 @@ class Relational(Expression):
                 name,
             )
             ERRORS_.append(err)
-            raise Exception(err)
 
     def greaterOrE(
         self, left_op: Retorno, right_op: Retorno, line: int, column: int, name: str
@@ -151,7 +147,6 @@ class Relational(Expression):
                 name,
             )
             ERRORS_.append(err)
-            raise Exception(err)
 
     def less(
         self, left_op: Retorno, right_op: Retorno, line: int, column: int, name: str
@@ -178,7 +173,6 @@ class Relational(Expression):
                 name,
             )
             ERRORS_.append(err)
-            raise Exception(err)
 
     def lessOrE(
         self, left_op: Retorno, right_op: Retorno, line: int, column: int, name: str
@@ -205,4 +199,3 @@ class Relational(Expression):
                 name,
             )
             ERRORS_.append(err)
-            raise Exception(err)

@@ -36,6 +36,7 @@ tokens = [
     "LBRACKET",
     "RBRACKET",
     "ARROW",
+    "ARROW2",
     "PIPE",
 ]
 
@@ -122,6 +123,7 @@ t_RCBRACKET = r"\}"
 t_LBRACKET = r"\["
 t_RBRACKET = r"\]"
 t_ARROW = r"=>"
+t_ARROW2 = r"->"
 t_PIPE = r"\|"
 
 

@@ -59,7 +59,7 @@ class Scope:
                 break
         return None
 
-    def saveFunction(self, id: str, fn, line: int, col: int):
+    def saveFunction(self, id: str, fn: dict, line: int, col: int):
         scope = self
         if scope.anterior != None:
             err = Error(
@@ -70,7 +70,7 @@ class Scope:
             )
             ERRORS_.append(err)
         if id not in scope.functions:
-            self.functions[id] = Function(id, fn["parameters"], fn["code"])
+            self.functions[id] = Function(id, fn["parameters"], fn["code"], fn["type"])
         else:
             err = Error(
                 line,
@@ -81,11 +81,10 @@ class Scope:
             ERRORS_.append(err)
 
     def getFunction(self, id: str) -> Function:
-        scope = self
         while True:
             if id in self.functions:
                 return self.functions[id]
-            scope = scope.anterior
-            if scope == None:
+            if self.anterior == None:
                 break
-        return None
+            self = self.anterior
+        

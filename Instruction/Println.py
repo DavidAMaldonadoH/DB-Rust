@@ -25,6 +25,8 @@ class Println(Instruction):
                 for i, field in enumerate(fields):
                     if i != len(fields) - 1:
                         result = ""
+                        if values_[i+1] is None:
+                            break
                         if isinstance(values_[i + 1].getValue(), bool):
                             result = str(values_[i + 1].getValue()).lower()
                         elif (values_[i + 1].getType() != Type.Array) and (
@@ -45,7 +47,6 @@ class Println(Instruction):
                     scope.name,
                 )
                 ERRORS_.append(err)
-                raise Exception(err)
         elif "{}" in str(values_[0].getValue()) or "{:?}" in str(values_[0].getValue()):
             err = Error(
                 self.line,
@@ -54,7 +55,6 @@ class Println(Instruction):
                 scope.name,
             )
             ERRORS_.append(err)
-            raise Exception(err)
         else:
             if values_[0].getType() == Type.Str:
                 CONSOLE_CONTENT.append(values_[0].getValue())
@@ -66,7 +66,6 @@ class Println(Instruction):
                     scope.name,
                 )
                 ERRORS_.append(err)
-                raise Exception(err)
 
     def printLists(self, var: any) -> str:
         output = ""
