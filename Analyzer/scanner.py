@@ -81,6 +81,8 @@ reserved = {
     "capacity": "RCAPACITY",
     "remove": "RREMOVE",
     "contains": "RCONTAINS",
+    "push": "RPUSH",
+    "insert": "RINSERT",
     "fn": "RFN",
 }
 

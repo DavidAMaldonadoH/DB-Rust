@@ -1,4 +1,5 @@
 from typing import Optional
+from Expression.Literal import Literal
 from Util.Instruction import Instruction
 from Util.Expression import Expression
 from Util.Error import ERRORS_, Error
@@ -26,6 +27,10 @@ class For(Instruction):
         start_expr = self.start.execute(scope)
         if start_expr.getType() == Type.Int or start_expr.getType() == Type.Usize:
             end_expr = self.end.execute(scope)
+            if isinstance(self.start, Literal):
+                start_expr.type = Type.Usize if start_expr.type == Type.Int else start_expr.type
+            if isinstance(self.end, Literal):
+                end_expr.type = Type.Usize if end_expr.type == Type.Int else end_expr.type
             if end_expr.getType() == Type.Int or end_expr.getType() == Type.Usize:
                 for_scope = Scope(scope, "For")
                 for_scope.saveVar(

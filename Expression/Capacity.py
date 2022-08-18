@@ -12,7 +12,7 @@ class Capacity(Expression):
     def execute(self, scope: Scope) -> Retorno:
         val = self.expr.execute(scope)
         if val.getType() == Type.Vector:
-            return Retorno(val.getValue().size, Type.Int)
+            return Retorno(val.getValue().size, Type.Usize)
         else:
             err = Error(
                 self.line,

@@ -31,11 +31,13 @@ from Instruction.For import For
 from Instruction.FunctionDeclaration import FunctionDeclaration
 from Instruction.FunctionCall import FunctionCall
 from Instruction.If import If
+from Instruction.Insert import Insert
 from Instruction.Loop import Loop
 from Instruction.Match import Match
 from Instruction.NestedAssignation import NestedAssignation
 from Instruction.NewStruct import NewStruct
 from Instruction.Println import Println
+from Instruction.Push import Push
 from Instruction.Return import Return
 from Instruction.Statement import Statement
 from Instruction.While import While
@@ -53,7 +55,7 @@ precedence = (
     ("right", "RAS", "CREATION"),
     ("right", "ID_ACCESS"),
     ("right", "UMINUS", "NOT", "AMPERSAND"),
-    ("left", "DOT", "LPAREN", "LBRACKET"),
+    ("left", "DOT", "LPAREN", "RPAREN", "LBRACKET", "RBRACKET"),
 )
 
 
@@ -83,6 +85,8 @@ def p_instr(p):
     | loop
     | for
     | struct_st
+    | push SEMICOLON
+    | insert SEMICOLON
     | function_call SEMICOLON
     | break SEMICOLON
     | continue SEMICOLON
@@ -96,7 +100,9 @@ def p_simple_instr(p):
     | asignation
     | break
     | continue
-    | return"""
+    | return
+    | push
+    | insert"""
     p[0] = p[1]
 
 
@@ -243,7 +249,7 @@ def p_function_return(p):
 
 
 def p_function_call(p):
-    """function_call : ID LPAREN expressions RPAREN
+    """function_call : ID LPAREN params RPAREN
     | ID LPAREN RPAREN"""
     if p[3] == ")":
         p[0] = FunctionCall(p.lineno(1), p.lexpos(1), p[1], [])
@@ -263,8 +269,37 @@ def p_args_item(p):
 
 
 def p_arg(p):
-    """arg : ID COLON primitive_type"""
-    p[0] = {"name": p[1], "type": p[3]}
+    """arg : ID COLON primitive_type
+    | ID COLON AMPERSAND RMUT array_type
+    | ID COLON AMPERSAND RMUT vector_type
+    | ID COLON AMPERSAND RMUT LBRACKET primitive_type RBRACKET"""
+    if p[3] == "&":
+        if p[5] == "[":
+            p[0] = {"name": p[1], "type": {"type": p[6], "size": -1}, "mut": True}
+        else:
+            p[0] = {"name": p[1], "type": p[5], "mut": True}
+    else:
+        p[0] = {"name": p[1], "type": p[3], "mut": False}
+
+
+def p_params_list(p):
+    "params : params COMMA param"
+    p[1].append(p[3])
+    p[0] = p[1]
+
+
+def p_params_item(p):
+    "params : param"
+    p[0] = [p[1]]
+
+
+def p_param(p):
+    """param : expression
+    | AMPERSAND RMUT expression"""
+    if p[1] == "&":
+        p[0] = {"value": p[3], "mut": True}
+    else:
+        p[0] = {"value": p[1], "mut": False}
 
 
 def p_ifst(p):
@@ -360,6 +395,14 @@ def p_return_2(p):
         p[0] = Return(p.lineno(1), p.lexpos(1), p[2])
     else:
         p[0] = Return(p.lineno(1), p.lexpos(1), p[1])
+
+def p_push(p):
+    "push : ID DOT RPUSH LPAREN expression RPAREN"
+    p[0] = Push(p.lineno(1), p.lexpos(1), p[1], None, p[5])
+
+def p_insert(p):
+    "insert : ID DOT RINSERT LPAREN expression COMMA expression RPAREN"
+    p[0] = Insert(p.lineno(1), p.lexpos(1), p[1], None, p[7], p[5])
 
 
 def p_expressions(p):
@@ -621,7 +664,7 @@ def p_exprs_vector(p):
 
 
 def p_expr_function(p):
-    """expression : ID LPAREN expressions RPAREN
+    """expression : ID LPAREN params RPAREN
     | ID LPAREN RPAREN"""
     if p[3] == ")":
         p[0] = FunctionCall(p.lineno(1), p.lexpos(1), p[1], [])

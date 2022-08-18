@@ -1,3 +1,4 @@
+from Expression.Literal import Literal
 from Util.Error import ERRORS_, Error
 from Util.Expression import Expression
 from Util.Retorno import RelationalType, Retorno, Type
@@ -21,6 +22,10 @@ class Relational(Expression):
     def execute(self, scope: Scope) -> Retorno:
         left_op = self.left.execute(scope)
         right_op = self.right.execute(scope)
+        if isinstance(self.left, Literal) and right_op.getType() == Type.Usize:
+            left_op.type = Type.Usize if left_op.type == Type.Int else left_op.type
+        if isinstance(self.right, Literal) and left_op.getType() == Type.Usize:
+            right_op.type = Type.Usize if right_op.type == Type.Int else right_op.type
         if self.type == RelationalType.Equals:
             return self.equals(left_op, right_op, self.line, self.column, scope.name)
         elif self.type == RelationalType.NotEquals:
@@ -47,7 +52,9 @@ class Relational(Expression):
     def equals(
         self, left_op: Retorno, right_op: Retorno, line: int, column: int, name: str
     ) -> Retorno:
-        if left_op.type == Type.Int and right_op.type == Type.Int:
+        if (left_op.type == Type.Int or left_op.type == Type.Usize) and (
+            right_op.type == Type.Int or right_op.type == Type.Usize
+        ):
             return Retorno(left_op.value == right_op.value, Type.Bool)
         elif left_op.type == Type.Float and right_op.type == Type.Float:
             return Retorno(left_op.value == right_op.value, Type.Bool)
@@ -58,8 +65,6 @@ class Relational(Expression):
         elif (left_op.type == Type.Str or left_op.type == Type.String) and (
             right_op.type == Type.Str or right_op.type == Type.String
         ):
-            return Retorno(left_op.value == right_op.value, Type.Bool)
-        elif left_op.type == Type.Usize and right_op.type == Type.Usize:
             return Retorno(left_op.value == right_op.value, Type.Bool)
         else:
             err = Error(
@@ -73,7 +78,9 @@ class Relational(Expression):
     def notEquals(
         self, left_op: Retorno, right_op: Retorno, line: int, column: int, name: str
     ) -> Retorno:
-        if left_op.type == Type.Int and right_op.type == Type.Int:
+        if (left_op.type == Type.Int or left_op.type == Type.Usize) and (
+            right_op.type == Type.Int or right_op.type == Type.Usize
+        ):
             return Retorno(left_op.value != right_op.value, Type.Bool)
         elif left_op.type == Type.Float and right_op.type == Type.Float:
             return Retorno(left_op.value != right_op.value, Type.Bool)
@@ -99,7 +106,9 @@ class Relational(Expression):
     def greater(
         self, left_op: Retorno, right_op: Retorno, line: int, column: int, name: str
     ) -> Retorno:
-        if left_op.type == Type.Int and right_op.type == Type.Int:
+        if (left_op.type == Type.Int or left_op.type == Type.Usize) and (
+            right_op.type == Type.Int or right_op.type == Type.Usize
+        ):
             return Retorno(left_op.value > right_op.value, Type.Bool)
         elif left_op.type == Type.Float and right_op.type == Type.Float:
             return Retorno(left_op.value > right_op.value, Type.Bool)
@@ -125,7 +134,9 @@ class Relational(Expression):
     def greaterOrE(
         self, left_op: Retorno, right_op: Retorno, line: int, column: int, name: str
     ) -> Retorno:
-        if left_op.type == Type.Int and right_op.type == Type.Int:
+        if (left_op.type == Type.Int or left_op.type == Type.Usize) and (
+            right_op.type == Type.Int or right_op.type == Type.Usize
+        ):
             return Retorno(left_op.value >= right_op.value, Type.Bool)
         elif left_op.type == Type.Float and right_op.type == Type.Float:
             return Retorno(left_op.value >= right_op.value, Type.Bool)
@@ -151,7 +162,9 @@ class Relational(Expression):
     def less(
         self, left_op: Retorno, right_op: Retorno, line: int, column: int, name: str
     ) -> Retorno:
-        if left_op.type == Type.Int and right_op.type == Type.Int:
+        if (left_op.type == Type.Int or left_op.type == Type.Usize) and (
+            right_op.type == Type.Int or right_op.type == Type.Usize
+        ):
             return Retorno(left_op.value < right_op.value, Type.Bool)
         elif left_op.type == Type.Float and right_op.type == Type.Float:
             return Retorno(left_op.value < right_op.value, Type.Bool)
@@ -177,7 +190,9 @@ class Relational(Expression):
     def lessOrE(
         self, left_op: Retorno, right_op: Retorno, line: int, column: int, name: str
     ) -> Retorno:
-        if left_op.type == Type.Int and right_op.type == Type.Int:
+        if (left_op.type == Type.Int or left_op.type == Type.Usize) and (
+            right_op.type == Type.Int or right_op.type == Type.Usize
+        ):
             return Retorno(left_op.value <= right_op.value, Type.Bool)
         elif left_op.type == Type.Float and right_op.type == Type.Float:
             return Retorno(left_op.value <= right_op.value, Type.Bool)

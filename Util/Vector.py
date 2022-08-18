@@ -32,11 +32,14 @@ class Vector:
         return self.size
 
     def appendValue(self, value: Symbol):
-        if len(self.data) <= self.size:
-            self.data.append(value)
-            self.size += 1
-            if self.size == len(self.data) and self.capacity:
-                self.size = self.size * 2
+        self.data.append(value)
+        if self.size == len(self.data):
+            self.size = self.size * 2
+
+    def insertValue(self, index: int, value: any):
+        self.data.insert(index, value)
+        if self.size == len(self.data):
+            self.size = self.size * 2
 
     def setValue(self, index: int, value: any):
         self.data[index].value = value

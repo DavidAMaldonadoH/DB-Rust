@@ -2,6 +2,7 @@ from Util.Error import ERRORS_, Error
 from Util.Expression import Expression
 from Util.Retorno import ArithmeticType, Retorno, Type
 from Util.Scope import Scope
+from Expression.Literal import Literal
 
 
 class Arithmetic(Expression):
@@ -23,6 +24,10 @@ class Arithmetic(Expression):
     def execute(self, scope: Scope) -> Retorno:
         left_op = self.left.execute(scope)
         right_op = self.right.execute(scope)
+        if isinstance(self.left, Literal) and right_op.getType() == Type.Usize:
+            left_op.type = Type.Usize if left_op.type == Type.Int else left_op.type
+        if isinstance(self.right, Literal) and left_op.getType() == Type.Usize:
+            right_op.type = Type.Usize if right_op.type == Type.Int else right_op.type
         if self.type == ArithmeticType.Addition:
             return self.addition(left_op, right_op, self.line, self.column, scope.name)
         elif self.type == ArithmeticType.Substraction:

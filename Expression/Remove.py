@@ -16,7 +16,6 @@ class Remove(Expression):
         if var.getType() == Type.Vector:
             if scope.getVar(self.expr.id).isMutable():
                 value = var.value.data[index.getValue()]
-                var.value.size -= 1
                 var.value.data.pop(index.getValue())
                 return Retorno(value.getValue(), value.getType())
             else:

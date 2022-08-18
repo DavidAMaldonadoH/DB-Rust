@@ -12,7 +12,7 @@ class Len(Expression):
     def execute(self, scope: Scope) -> Retorno:
         val = self.expr.execute(scope)
         if val.getType() == Type.Array or val.getType() == Type.Vector:
-            return Retorno(len(val.getValue().data), Type.Int)
+            return Retorno(len(val.getValue().data), Type.Usize)
         else:
             err = Error(
                 self.line,

@@ -1,5 +1,7 @@
+from turtle import left
+from Expression.Literal import Literal
 from Util.Error import ERRORS_, Error
-from Util.Retorno import Retorno, Type
+from Util.Retorno import Retorno, Type, getNestedType
 from Util.Expression import Expression
 from Util.Instruction import Instruction
 from Util.Scope import Scope
@@ -18,14 +20,53 @@ class FunctionCall(Instruction):
             fn.code.name = fn.id
             same_types = True
             for i in range(len(fn.parameters)):
-                arg = self.args[i].execute(scope)
-                if fn.parameters[i]["type"] != arg.type:
-                    same_types = False
-                    break
-                else:
+                arg = self.args[i]["value"].execute(scope)
+                if arg.type == Type.Vector:
+                    if isinstance(fn.parameters[i]["type"], dict):
+                        left_type = getNestedType(fn.parameters[i]["type"])
+                    else:
+                        left_type = fn.parameters[i]["type"].getNestedType()
+                    if isinstance(arg.value.type, dict):
+                        right_type = getNestedType(arg.value.type)
+                    else:
+                        right_type = "vec<" + arg.value.type.fullname + ">"
+                    if left_type != right_type:
+                        same_types = False
+                        break
                     fn_scope.saveVar(
                         fn.parameters[i]["name"],
-                        True,
+                        fn.parameters[i]["mut"],
+                        arg.value,
+                        arg.type,
+                        self.line,
+                        self.column,
+                    )
+                elif arg.type == Type.Array:
+                    left_type = getNestedType(fn.parameters[i]["type"])
+                    right_type = arg.getValue().getNestedType()
+                    if fn.parameters[i]["type"]["size"] == -1:
+                        left_type = fn.parameters[i]["type"]["type"].fullname
+                        right_type = right_type.split("*")[-1]
+                    if left_type != right_type:
+                        same_types = False
+                        break
+                    fn_scope.saveVar(
+                        fn.parameters[i]["name"],
+                        fn.parameters[i]["mut"],
+                        arg.value,
+                        arg.type,
+                        self.line,
+                        self.column,
+                    )
+                else:
+                    if isinstance(self.args[i]["value"], Literal) and arg.type == Type.Int:
+                        arg.type = Type.Usize if fn.parameters[i]["type"] == Type.Usize else Type.Int
+                    if fn.parameters[i]["type"] != arg.type:
+                        same_types = False
+                        break
+                    fn_scope.saveVar(
+                        fn.parameters[i]["name"],
+                        fn.parameters[i]["mut"],
                         arg.value,
                         arg.type,
                         self.line,

@@ -1,6 +1,8 @@
+from Expression.Literal import Literal
 from Util.Error import ERRORS_, Error
 from Util.Expression import Expression
 from Util.Instruction import Instruction
+from Util.Retorno import Type
 from Util.Scope import Scope
 
 
@@ -17,6 +19,8 @@ class Assignation(Instruction):
             if var.isMutable():
                 if isinstance(value_, dict):
                     value_ = value_["value"]
+                if isinstance(self.value, Literal) and value_.getType() == Type.Int:
+                    value_.type = Type.Usize if var.type == Type.Usize else Type.Int
                 if var.getType() == value_.getType():
                     var.value = value_.getValue()
                 else:
