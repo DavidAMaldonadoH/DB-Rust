@@ -21,7 +21,20 @@ class FunctionCall(Instruction):
             same_types = True
             for i in range(len(fn.parameters)):
                 arg = self.args[i]["value"].execute(scope)
-                if arg.type == Type.Vector:
+                if arg.type == Type.Struct:
+                    right_type = arg.value.name
+                    if right_type != fn.parameters[i]["type"]:
+                        same_types = False
+                        break
+                    fn_scope.saveVar(
+                        fn.parameters[i]["name"],
+                        fn.parameters[i]["mut"],
+                        arg.value,
+                        arg.type,
+                        self.line,
+                        self.column,
+                    )
+                elif arg.type == Type.Vector:
                     if isinstance(fn.parameters[i]["type"], dict):
                         left_type = getNestedType(fn.parameters[i]["type"])
                     else:
@@ -29,7 +42,10 @@ class FunctionCall(Instruction):
                     if isinstance(arg.value.type, dict):
                         right_type = getNestedType(arg.value.type)
                     else:
-                        right_type = "vec<" + arg.value.type.fullname + ">"
+                        if arg.value.type == Type.Struct:
+                            right_type = "vec<" + arg.value.value.name + ">"
+                        else:
+                            right_type = "vec<" + arg.value.type.fullname + ">"
                     if left_type != right_type:
                         same_types = False
                         break
@@ -77,7 +93,10 @@ class FunctionCall(Instruction):
                 if fn.type is not Type.Null:
                     if retorno is not None:
                         if retorno["type"] == "return":
-                            if retorno["value"].type == fn.type:
+                            return_type = retorno["value"].type
+                            if return_type == Type.Struct:
+                                return_type = retorno["value"].value.name
+                            if return_type == fn.type:
                                 return Retorno(
                                     retorno["value"].value, retorno["value"].type
                                 )

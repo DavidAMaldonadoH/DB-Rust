@@ -33,7 +33,10 @@ class Insert(Instruction):
                         if value_.type == Type.Vector or value_.type == Type.Array:
                             value_type = "vec<" + value_.value.getNestedType() + ">"
                         else:
-                            value_type = "vec<" + value_.type.fullname + ">"
+                            if value_.type == Type.Struct:
+                                value_type = "vec<" + value_.value.name + ">"
+                            else:
+                                value_type = "vec<" + value_.type.fullname + ">"
                         if isinstance(var.getValue().type, dict):
                             vector_type = getNestedType(var.getValue().type)
                         else:

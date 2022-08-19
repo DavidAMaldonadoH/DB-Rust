@@ -3,6 +3,7 @@ from Util.Expression import Expression
 from Util.Retorno import Type
 from Util.Scope import Scope
 from Util.Error import ERRORS_, Error
+from Util.Symbol import Symbol
 
 
 class NestedAssignation(Instruction):
@@ -34,7 +35,7 @@ class NestedAssignation(Instruction):
                             )
                             ERRORS_.append(err)
                     else:
-                        actual_var.value = actual_var.value[self.vars[i]]
+                        actual_var = actual_var.value[self.vars[i]]
                 if isinstance(self.vars[-1], Expression):
                     index = self.vars[len(self.vars) - 1].execute(scope)
                     if index.type == Type.Int or index.type == Type.Usize:

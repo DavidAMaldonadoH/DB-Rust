@@ -52,8 +52,7 @@ precedence = (
     ("left", "PLUS", "MINUS"),
     ("left", "TIMES", "DIVIDE", "MODULE"),
     ("nonassoc", "POWER"),
-    ("right", "RAS", "CREATION"),
-    ("right", "ID_ACCESS"),
+    ("right", "RAS"),
     ("right", "UMINUS", "NOT", "AMPERSAND"),
     ("left", "DOT", "LPAREN", "RPAREN", "LBRACKET", "RBRACKET"),
 )
@@ -153,6 +152,8 @@ def p_vector_type(p):
 
 def p_statement(p):
     "statement : LCBRACKET instructions simple_instr RCBRACKET"
+    if p[2] is None:
+        p[2] = []
     if p[3] is not None:
         p[2].append(p[3])
     p[0] = Statement(p.lineno(1), p.lexpos(1), p[2])
@@ -241,7 +242,13 @@ def p_function(p):
 
 def p_function_return(p):
     """function : RFN ID LPAREN RPAREN ARROW2 primitive_type statement
-    | RFN ID LPAREN args RPAREN ARROW2 primitive_type statement"""
+    | RFN ID LPAREN args RPAREN ARROW2 primitive_type statement
+    | RFN ID LPAREN RPAREN ARROW2 array_type statement
+    | RFN ID LPAREN args RPAREN ARROW2 array_type statement
+    | RFN ID LPAREN RPAREN ARROW2 vector_type statement
+    | RFN ID LPAREN args RPAREN ARROW2 vector_type statement
+    | RFN ID LPAREN RPAREN ARROW2 ID statement
+    | RFN ID LPAREN args RPAREN ARROW2 ID statement"""
     if p[4] != ")":
         p[0] = FunctionDeclaration(p.lineno(1), p.lexpos(1), p[2], p[4], p[8], p[7])
     else:
@@ -272,6 +279,7 @@ def p_arg(p):
     """arg : ID COLON primitive_type
     | ID COLON AMPERSAND RMUT array_type
     | ID COLON AMPERSAND RMUT vector_type
+    | ID COLON AMPERSAND RMUT ID
     | ID COLON AMPERSAND RMUT LBRACKET primitive_type RBRACKET"""
     if p[3] == "&":
         if p[5] == "[":
@@ -396,9 +404,11 @@ def p_return_2(p):
     else:
         p[0] = Return(p.lineno(1), p.lexpos(1), p[1])
 
+
 def p_push(p):
     "push : ID DOT RPUSH LPAREN expression RPAREN"
     p[0] = Push(p.lineno(1), p.lexpos(1), p[1], None, p[5])
+
 
 def p_insert(p):
     "insert : ID DOT RINSERT LPAREN expression COMMA expression RPAREN"
@@ -571,18 +581,6 @@ def p_expr_tostr(p):
     p[0] = ToString(p.lineno(1), p.lexpos(1), p[1])
 
 
-def p_expr_struct(p):
-    "expression : ID LCBRACKET items RCBRACKET %prec CREATION"
-    p[0] = CreateStruct(p.lineno(1), p.lexpos(1), p[1], p[3])
-
-
-def p_expr_selection(p):
-    """expression : ifst
-    | match
-    | loop"""
-    p[0] = p[1]
-
-
 def p_literal(p):
     """expression : INT
     | FLOAT
@@ -607,8 +605,13 @@ def p_reference(p):
 
 
 def p_access(p):
-    "expression : ID %prec ID_ACCESS"
+    "expression : ID"
     p[0] = SimpleAccess(p.lineno(1), p.lexpos(1), p[1])
+
+
+def p_expr_struct(p):
+    "expression : ID LCBRACKET items RCBRACKET"
+    p[0] = CreateStruct(p.lineno(1), p.lexpos(1), p[1], p[3])
 
 
 def p_access_array(p):
@@ -670,6 +673,13 @@ def p_expr_function(p):
         p[0] = FunctionCall(p.lineno(1), p.lexpos(1), p[1], [])
     else:
         p[0] = FunctionCall(p.lineno(1), p.lexpos(1), p[1], p[3])
+
+
+def p_expr_selection(p):
+    """expression : ifst
+    | match
+    | loop"""
+    p[0] = p[1]
 
 
 def p_empty(p):
