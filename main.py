@@ -4,9 +4,11 @@ from PyQt5.QtWidgets import *
 from Analyzer.parser import parser
 from Instruction.FunctionDeclaration import FunctionDeclaration
 from Instruction.FunctionCall import FunctionCall
+from Instruction.ModDeclaration import ModDeclaration
 from Instruction.NewStruct import NewStruct
 from Instruction.Println import CONSOLE_CONTENT
 from Util.Error import ERRORS_
+from Util.Module import BASES, TABLAS
 from Util.Scope import Scope
 from Util.Symbol import SYMBOLS
 
@@ -34,6 +36,8 @@ class MainWindow(QMainWindow):
         CONSOLE_CONTENT.clear()
         SYMBOLS.clear()
         ERRORS_.clear()
+        BASES.clear()
+        TABLAS.clear()
         if input != "":
             ast = parser.parse(input, tracking=True)
             g_scope = Scope(None, "Global")
@@ -41,6 +45,8 @@ class MainWindow(QMainWindow):
                 if isinstance(node, FunctionDeclaration):
                     node.execute(g_scope)
                 elif isinstance(node, NewStruct):
+                    node.execute(g_scope)
+                elif isinstance(node, ModDeclaration):
                     node.execute(g_scope)
             main = FunctionCall(0, 0, "main", [])
             main.execute(g_scope)
@@ -81,14 +87,10 @@ class MainWindow(QMainWindow):
         self.ui.btn_errores.clicked.connect(lambda: self.erroresAction())
 
         # Bases Page
-        self.ui.btn_bases.clicked.connect(
-            lambda: self.ui.stackedWidget_2.setCurrentWidget(self.ui.page_6)
-        )
+        self.ui.btn_bases.clicked.connect(lambda: self.basesAction())
 
         # Tablas Page
-        self.ui.btn_tablas.clicked.connect(
-            lambda: self.ui.stackedWidget_2.setCurrentWidget(self.ui.page_7)
-        )
+        self.ui.btn_tablas.clicked.connect(lambda: self.tablasAction())
 
     def setUpTables(self):
         afont = QtGui.QFont()
@@ -161,6 +163,26 @@ class MainWindow(QMainWindow):
             self.ui.table_errores.setItem(i, 3, QTableWidgetItem(str(err.line)))
             self.ui.table_errores.setItem(i, 4, QTableWidgetItem(str(err.column)))
             self.ui.table_errores.setItem(i, 5, QTableWidgetItem(err.time))
+
+    def basesAction(self):
+        self.ui.stackedWidget_2.setCurrentWidget(self.ui.page_6)
+        self.ui.table_bases.setEditTriggers(QTableWidget.NoEditTriggers)
+        self.ui.table_bases.setRowCount(len(BASES))
+        for i, base in enumerate(BASES):
+            self.ui.table_bases.setItem(i, 0, QTableWidgetItem(str(i + 1)))
+            self.ui.table_bases.setItem(i, 1, QTableWidgetItem(base["name"]))
+            self.ui.table_bases.setItem(i, 2, QTableWidgetItem(str(base["tables"])))
+            self.ui.table_bases.setItem(i, 3, QTableWidgetItem(str(base["line"])))
+
+    def tablasAction(self):
+        self.ui.stackedWidget_2.setCurrentWidget(self.ui.page_7)
+        self.ui.table_tablas.setEditTriggers(QTableWidget.NoEditTriggers)
+        self.ui.table_tablas.setRowCount(len(TABLAS))
+        for i, table in enumerate(TABLAS):
+            self.ui.table_tablas.setItem(i, 0, QTableWidgetItem(str(i + 1)))
+            self.ui.table_tablas.setItem(i, 1, QTableWidgetItem(table["name"]))
+            self.ui.table_tablas.setItem(i, 2, QTableWidgetItem(table["base"]))
+            self.ui.table_tablas.setItem(i, 3, QTableWidgetItem(str(table["line"])))
 
 
 if __name__ == "__main__":

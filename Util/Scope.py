@@ -1,5 +1,6 @@
 from typing import Optional
 from Util.Error import ERRORS_, Error
+from Util.Module import BASES, TABLAS, Module
 from .Function import Function
 from Util.Retorno import Type
 from Util.Struct import Struct
@@ -13,30 +14,27 @@ class Scope:
         self.variables = dict()
         self.structs = dict()
         self.functions = dict()
-        self.methods = dict()
+        self.modules = dict()
 
     def getGlobal(self):
-        scope = self
-        while scope.anterior != None:
-            scope = scope.anterior
-        return scope
+        while self.anterior != None:
+            self = self.anterior
+        return self
 
-    def getVar(self, id: str) -> Symbol:
-        scope = self
+    def getVar(self, name: str) -> Symbol:
         while True:
-            if scope.variables.get(id) != None:
-                return scope.variables.get(id)
-            scope = scope.anterior
-            if scope == None:
+            if name in self.variables:
+                return self.variables[name]
+            if self.anterior == None:
                 break
+            self = self.anterior
         return None
 
     def saveVar(self, id: str, mut: bool, value: any, type: Type, line: int, col: int):
-        scope = self
-        scope.variables[id] = Symbol(id, mut, value, type)
-        SYMBOLS.append(ReportSymbol(id, scope.name, type, "Variable", line, col))
+        self.variables[id] = Symbol(id, mut, value, type)
+        SYMBOLS.append(ReportSymbol(id, self.name, type, "Variable", line, col))
 
-    def saveStruct(self, name: str, items: dict, line: int, col: int):
+    def saveStruct(self, name: str, items: Struct, line: int, col: int):
         if name not in self.structs:
             self.structs[name] = items
         else:
@@ -50,27 +48,19 @@ class Scope:
             raise Exception(err)
 
     def getStruct(self, name: str) -> Struct:
-        scope = self
         while True:
-            if scope.structs.get(name) != None:
-                return scope.structs.get(name)
-            scope = scope.anterior
-            if scope == None:
+            if name in self.structs:
+                return self.structs[name]
+            if self.anterior == None:
                 break
+            self = self.anterior
         return None
 
     def saveFunction(self, id: str, fn: dict, line: int, col: int):
-        scope = self
-        if scope.anterior != None:
-            err = Error(
-                line,
-                col,
-                f"La funcion {id} no puede ser definida en el ambiente global.",
-                scope.name,
+        if id not in self.functions:
+            self.functions[id] = Function(
+                id, fn["parameters"], fn["code"], fn["type"], fn["public"]
             )
-            ERRORS_.append(err)
-        if id not in scope.functions:
-            self.functions[id] = Function(id, fn["parameters"], fn["code"], fn["type"])
         else:
             err = Error(
                 line,
@@ -80,11 +70,31 @@ class Scope:
             )
             ERRORS_.append(err)
 
-    def getFunction(self, id: str) -> Function:
+    def getFunction(self, name: str) -> Function:
         while True:
-            if id in self.functions:
-                return self.functions[id]
+            if name in self.functions:
+                return self.functions[name]
             if self.anterior == None:
                 break
             self = self.anterior
-        
+        return None
+
+    def saveModule(self, name: str, mod: dict, line: int, col: int):
+        if name not in self.modules:
+            self.modules[name] = Module(name, mod["scope"], mod["father"], mod["public"])
+            if mod["father"] == "Global":
+                BASES.append({"name": name, "tables": 0, "line": line})
+            else:
+                for base in BASES:
+                    if base["name"] == mod["father"]:
+                        base["tables"] += 1
+                        break
+                TABLAS.append({"name": name, "base": mod["father"], "line": line})
+        else:
+            err = Error(
+                line,
+                col,
+                f"El módulo {name} ya existe.",
+                self.name,
+            )
+            ERRORS_.append(err)

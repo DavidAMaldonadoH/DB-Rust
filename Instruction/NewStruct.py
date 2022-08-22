@@ -6,13 +6,16 @@ from Util.Symbol import Symbol
 
 
 class NewStruct(Instruction):
-    def __init__(self, line: int, column: int, name: str, items: dict):
+    def __init__(
+        self, line: int, column: int, name: str, items: dict, public: bool = False
+    ):
         super().__init__(line, column)
         self.name = name
         self.items = items
+        self.public = public
 
     def execute(self, scope: Scope) -> any:
-        struct = Struct(self.name)
+        struct = Struct(self.name, self.public)
         for key, value in self.items.items():
             if key not in struct.items:
                 sym = Symbol(key, True, None, value)

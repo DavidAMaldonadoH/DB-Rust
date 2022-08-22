@@ -15,7 +15,7 @@ class CreateStruct(Expression):
     def execute(self, scope: Scope) -> Retorno:
         struct_base = scope.getStruct(self.name)
         if struct_base is not None:
-            struct = Struct(self.name)
+            struct = Struct(self.name, True)
             for key, value in self.items.items():
                 if key in struct_base.items:
                     val = value.execute(scope)

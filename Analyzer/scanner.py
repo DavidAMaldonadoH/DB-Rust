@@ -84,6 +84,8 @@ reserved = {
     "push": "RPUSH",
     "insert": "RINSERT",
     "fn": "RFN",
+    "pub": "RPUB",
+    "mod": "RMOD",
 }
 
 tokens += list(reserved.values())

@@ -1,4 +1,3 @@
-from turtle import left
 from Expression.Literal import Literal
 from Util.Error import ERRORS_, Error
 from Util.Retorno import Retorno, Type, getNestedType
@@ -75,8 +74,15 @@ class FunctionCall(Instruction):
                         self.column,
                     )
                 else:
-                    if isinstance(self.args[i]["value"], Literal) and arg.type == Type.Int:
-                        arg.type = Type.Usize if fn.parameters[i]["type"] == Type.Usize else Type.Int
+                    if (
+                        isinstance(self.args[i]["value"], Literal)
+                        and arg.type == Type.Int
+                    ):
+                        arg.type = (
+                            Type.Usize
+                            if fn.parameters[i]["type"] == Type.Usize
+                            else Type.Int
+                        )
                     if fn.parameters[i]["type"] != arg.type:
                         same_types = False
                         break
@@ -94,9 +100,15 @@ class FunctionCall(Instruction):
                     if retorno is not None:
                         if retorno["type"] == "return":
                             return_type = retorno["value"].type
+                            function_type = fn.type
                             if return_type == Type.Struct:
                                 return_type = retorno["value"].value.name
-                            if return_type == fn.type:
+                            elif (
+                                return_type == Type.Vector or return_type == Type.Array
+                            ):
+                                return_type = retorno["value"].value.getNestedType()
+                                function_type = getNestedType(fn.type)
+                            if return_type == function_type:
                                 return Retorno(
                                     retorno["value"].value, retorno["value"].type
                                 )

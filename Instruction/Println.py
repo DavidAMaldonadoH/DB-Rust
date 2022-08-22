@@ -20,12 +20,14 @@ class Println(Instruction):
         if len(values_) > 1:
             input_ = str(values_[0].getValue())
             output: str = ""
+            isNone: bool = False
             if "{}" in input_ or "{:?}" in input_:
                 fields = re.split(r"{}|{\:\?}", values_[0].getValue())
                 for i, field in enumerate(fields):
                     if i != len(fields) - 1:
                         result = ""
-                        if values_[i+1] is None:
+                        if values_[i + 1] is None:
+                            isNone = True
                             break
                         if isinstance(values_[i + 1].getValue(), bool):
                             result = str(values_[i + 1].getValue()).lower()
@@ -38,7 +40,16 @@ class Println(Instruction):
                         output += field + result
                     else:
                         output += field
-                CONSOLE_CONTENT.append(output)
+                if not isNone:
+                    CONSOLE_CONTENT.append(output)
+                else:
+                    err = Error(
+                        self.line,
+                        self.column,
+                        "El valor recibido no se puede imprimir",
+                        scope.name,
+                    )
+                    ERRORS_.append(err)
             else:
                 err = Error(
                     self.line,

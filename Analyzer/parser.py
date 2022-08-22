@@ -34,6 +34,8 @@ from Instruction.If import If
 from Instruction.Insert import Insert
 from Instruction.Loop import Loop
 from Instruction.Match import Match
+from Instruction.ModDeclaration import ModDeclaration
+from Instruction.ModuleCall import ModuleCall
 from Instruction.NestedAssignation import NestedAssignation
 from Instruction.NewStruct import NewStruct
 from Instruction.Println import Println
@@ -54,7 +56,7 @@ precedence = (
     ("nonassoc", "POWER"),
     ("right", "RAS"),
     ("right", "UMINUS", "NOT", "AMPERSAND"),
-    ("left", "DOT", "LPAREN", "RPAREN", "LBRACKET", "RBRACKET"),
+    ("left", "DOT", "LPAREN", "RPAREN", "LBRACKET", "RBRACKET", "DCOLON"),
 )
 
 
@@ -84,6 +86,7 @@ def p_instr(p):
     | loop
     | for
     | struct_st
+    | mod
     | push SEMICOLON
     | insert SEMICOLON
     | function_call SEMICOLON
@@ -229,6 +232,15 @@ def p_nested_var_id(p):
     p[0] = [p[1], p[3]]
 
 
+def p_mod(p):
+    """mod : RMOD ID statement
+    | RPUB RMOD ID statement"""
+    if p[1] == "pub":
+        p[0] = ModDeclaration(p.lineno(1), p.lexpos(1), p[3], True, p[4])
+    else:
+        p[0] = ModDeclaration(p.lineno(1), p.lexpos(1), p[2], False, p[3])
+
+
 def p_function(p):
     """function : RFN ID LPAREN RPAREN statement
     | RFN ID LPAREN args RPAREN statement"""
@@ -238,6 +250,19 @@ def p_function(p):
         )
     else:
         p[0] = FunctionDeclaration(p.lineno(1), p.lexpos(1), p[2], [], p[5], Type.Null)
+
+
+def p_public_function(p):
+    """function : RPUB RFN ID LPAREN RPAREN statement
+    | RPUB RFN ID LPAREN args RPAREN statement"""
+    if p[5] != ")":
+        p[0] = FunctionDeclaration(
+            p.lineno(1), p.lexpos(1), p[3], p[5], p[7], Type.Null, True
+        )
+    else:
+        p[0] = FunctionDeclaration(
+            p.lineno(1), p.lexpos(1), p[3], [], p[6], Type.Null, True
+        )
 
 
 def p_function_return(p):
@@ -255,6 +280,23 @@ def p_function_return(p):
         p[0] = FunctionDeclaration(p.lineno(1), p.lexpos(1), p[2], [], p[7], p[6])
 
 
+def p_public_function_return(p):
+    """function : RPUB RFN ID LPAREN RPAREN ARROW2 primitive_type statement
+    | RPUB RFN ID LPAREN args RPAREN ARROW2 primitive_type statement
+    | RPUB RFN ID LPAREN RPAREN ARROW2 array_type statement
+    | RPUB RFN ID LPAREN args RPAREN ARROW2 array_type statement
+    | RPUB RFN ID LPAREN RPAREN ARROW2 vector_type statement
+    | RPUB RFN ID LPAREN args RPAREN ARROW2 vector_type statement
+    | RPUB RFN ID LPAREN RPAREN ARROW2 ID statement
+    | RPUB RFN ID LPAREN args RPAREN ARROW2 ID statement"""
+    if p[5] != ")":
+        p[0] = FunctionDeclaration(
+            p.lineno(1), p.lexpos(1), p[3], p[5], p[9], p[8], True
+        )
+    else:
+        p[0] = FunctionDeclaration(p.lineno(1), p.lexpos(1), p[3], [], p[8], p[7], True)
+
+
 def p_function_call(p):
     """function_call : ID LPAREN params RPAREN
     | ID LPAREN RPAREN"""
@@ -262,6 +304,15 @@ def p_function_call(p):
         p[0] = FunctionCall(p.lineno(1), p.lexpos(1), p[1], [])
     else:
         p[0] = FunctionCall(p.lineno(1), p.lexpos(1), p[1], p[3])
+
+
+def p_function_call_2(p):
+    """function_call : id_list LPAREN params RPAREN
+    | id_list LPAREN RPAREN"""
+    if p[3] == ")":
+        p[0] = ModuleCall(p.lineno(1), p.lexpos(1), p[1], [])
+    else:
+        p[0] = ModuleCall(p.lineno(1), p.lexpos(1), p[1], p[3])
 
 
 def p_args_list(p):
@@ -290,6 +341,27 @@ def p_arg(p):
         p[0] = {"name": p[1], "type": p[3], "mut": False}
 
 
+def p_arg_2(p):
+    """arg : RMUT ID COLON array_type
+    | RMUT ID COLON vector_type
+    | RMUT ID COLON ID
+    | RMUT ID COLON LBRACKET primitive_type RBRACKET
+    | RMUT ID COLON AMPERSAND array_type
+    | RMUT ID COLON AMPERSAND vector_type
+    | RMUT ID COLON AMPERSAND ID
+    | RMUT ID COLON AMPERSAND LBRACKET primitive_type RBRACKET"""
+    if p[4] == "&":
+        if p[5] == "[":
+            p[0] = {"name": p[2], "type": {"type": p[6], "size": -1}, "mut": True}
+        else:
+            p[0] = {"name": p[2], "type": p[5], "mut": True}
+    else:
+        if p[4] == "[":
+            p[0] = {"name": p[2], "type": {"type": p[5], "size": -1}, "mut": True}
+        else:
+            p[0] = {"name": p[2], "type": p[4], "mut": True}
+
+
 def p_params_list(p):
     "params : params COMMA param"
     p[1].append(p[3])
@@ -303,9 +375,13 @@ def p_params_item(p):
 
 def p_param(p):
     """param : expression
-    | AMPERSAND RMUT expression"""
+    | AMPERSAND RMUT expression
+    | AMPERSAND expression"""
     if p[1] == "&":
-        p[0] = {"value": p[3], "mut": True}
+        if p[2] == "mut":
+            p[0] = {"value": p[3], "mut": True}
+        else:
+            p[0] = {"value": p[2], "mut": False}
     else:
         p[0] = {"value": p[1], "mut": False}
 
@@ -440,6 +516,11 @@ def p_expressions_expression_match(p):
 def p_struct_st(p):
     "struct_st : RSTRUCT ID LCBRACKET items_2 RCBRACKET"
     p[0] = NewStruct(p.lineno(1), p.lexpos(1), p[2], p[4])
+
+
+def p_public_struct_st(p):
+    "struct_st : RPUB RSTRUCT ID LCBRACKET items_2 RCBRACKET"
+    p[0] = NewStruct(p.lineno(1), p.lexpos(1), p[3], p[5], True)
 
 
 def p_items(p):
@@ -673,6 +754,26 @@ def p_expr_function(p):
         p[0] = FunctionCall(p.lineno(1), p.lexpos(1), p[1], [])
     else:
         p[0] = FunctionCall(p.lineno(1), p.lexpos(1), p[1], p[3])
+
+
+def p_id_list(p):
+    "id_list : id_list DCOLON ID"
+    p[1].append(p[3])
+    p[0] = p[1]
+
+
+def p_id_list_2(p):
+    "id_list : ID DCOLON ID"
+    p[0] = [p[1], p[3]]
+
+
+def p_expr_module_access(p):
+    """expression : id_list LPAREN RPAREN
+    | id_list LPAREN params RPAREN"""
+    if p[3] == ")":
+        p[0] = ModuleCall(p.lineno(1), p.lexpos(1), p[1], [])
+    else:
+        p[0] = ModuleCall(p.lineno(1), p.lexpos(1), p[1], p[3])
 
 
 def p_expr_selection(p):
