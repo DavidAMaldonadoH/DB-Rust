@@ -185,6 +185,7 @@ class Ui_MainWindow(object):
         self.console.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.console.setLineWrapMode(QTextEdit.NoWrap)
         self.console.setReadOnly(True)
+        self.console.setTabStopWidth(self.console.fontMetrics().width(' ') * 4)
 
         self.gridLayout.addWidget(self.console, 1, 1, 1, 1)
 
@@ -212,6 +213,7 @@ class Ui_MainWindow(object):
         self.editor.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.editor.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.editor.setLineWrapMode(QTextEdit.NoWrap)
+        self.editor.setTabStopWidth(self.editor.fontMetrics().width(' ') * 4)
 
         self.gridLayout.addWidget(self.editor, 1, 0, 1, 1)
 
