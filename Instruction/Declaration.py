@@ -39,8 +39,11 @@ class Declaration(Instruction):
                     if self.type == Type.Usize and value_.getType() == Type.Int:
                         value_.type = Type.Usize
                     if value_.getType() == Type.Vector:
+                        final_type = self.type
+                        if isinstance(final_type["type"], str) and "::" in final_type["type"]:
+                            final_type["type"] = final_type["type"].split("::")[-1]
                         if value_.getValue().type == Type.Null:
-                            value_.getValue().type = self.type
+                            value_.getValue().type = final_type
                             scope.saveVar(
                                 self.id,
                                 self.mut,
@@ -50,7 +53,7 @@ class Declaration(Instruction):
                                 self.column,
                             )
                         else:
-                            left_type = getNestedType(self.type)
+                            left_type = getNestedType(final_type)
                             right_type = value_.getValue().getNestedType()
                             if left_type == right_type:
                                 scope.saveVar(
@@ -70,7 +73,10 @@ class Declaration(Instruction):
                                 )
                                 ERRORS_.append(err)
                     elif value_.getType() == Type.Array:
-                        left_type = getNestedType(self.type)
+                        final_type = self.type
+                        if isinstance(final_type["type"], str) and "::" in final_type["type"]:
+                            final_type["type"] = final_type["type"].split("::")[-1]
+                        left_type = getNestedType(final_type)
                         right_type = value_.getValue().getNestedType()
                         if left_type == right_type:
                             scope.saveVar(
@@ -90,7 +96,14 @@ class Declaration(Instruction):
                             )
                             ERRORS_.append(err)
                     elif value_.getType() == Type.Struct:
-                        if value_.getValue().name == self.type:
+                        modules = None
+                        if "::" in self.type:
+                            modules = self.type.split("::")
+                        if modules is None:
+                            struct_type = self.type
+                        else:
+                            struct_type = modules[-1]
+                        if value_.getValue().name == struct_type:
                             scope.saveVar(
                                 self.id,
                                 self.mut,

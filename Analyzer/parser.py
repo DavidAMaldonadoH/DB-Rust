@@ -14,6 +14,7 @@ from Expression.CreateVector import CreateVector
 from Expression.Len import Len
 from Expression.Literal import Literal
 from Expression.Logic import Logic
+from Expression.ModuleStruct import ModuleStruct
 from Expression.Reference import Reference
 from Expression.Relational import Relational
 from Expression.Remove import Remove
@@ -145,12 +146,24 @@ def p_array_type(p):
     p[0] = {"type": p[2], "size": p[4]}
 
 
+def p_array_type_2(p):
+    "array_type : LBRACKET id_list SEMICOLON INT RBRACKET"
+    t = "::".join(p[2])
+    p[0] = {"type": t, "size": p[4]}
+
+
 def p_vector_type(p):
     """vector_type : RVECTOR LTHAN primitive_type GTHAN
     | RVECTOR LTHAN ID GTHAN
     | RVECTOR LTHAN array_type GTHAN
     | RVECTOR LTHAN vector_type GTHAN"""
     p[0] = {"type": p[3]}
+
+
+def p_vector_type_2(p):
+    "vector_type : RVECTOR LTHAN id_list GTHAN"
+    t = "::".join(p[3])
+    p[0] = {"type": t}
 
 
 def p_statement(p):
@@ -197,11 +210,23 @@ def p_declaration_array_struct_mut(p):
     p[0] = Declaration(p.lineno(1), p.lexpos(1), p[3], True, p[7], p[5])
 
 
+def p_declaration_array_struct_mut_2(p):
+    "declaration : RLET RMUT ID COLON id_list EQUAL expression"
+    t = "::".join(p[5])
+    p[0] = Declaration(p.lineno(1), p.lexpos(1), p[3], True, p[7], t)
+
+
 def p_declaration_array_struct(p):
     """declaration : RLET ID COLON array_type EQUAL expression
     | RLET ID COLON ID EQUAL expression
     | RLET ID COLON vector_type EQUAL expression"""
     p[0] = Declaration(p.lineno(1), p.lexpos(1), p[2], False, p[6], p[4])
+
+
+def p_declaration_array_struct_2(p):
+    "declaration : RLET ID COLON id_list EQUAL expression"
+    t = "::".join(p[4])
+    p[0] = Declaration(p.lineno(1), p.lexpos(1), p[2], False, p[6], t)
 
 
 def p_println(p):
@@ -503,7 +528,7 @@ def p_expressions_expression(p):
 
 
 def p_expressions_match(p):
-    "expressions_match :  expressions_match PIPE expression"
+    "expressions_match : expressions_match PIPE expression"
     p[1].append(p[3])
     p[0] = p[1]
 
@@ -514,12 +539,14 @@ def p_expressions_expression_match(p):
 
 
 def p_struct_st(p):
-    "struct_st : RSTRUCT ID LCBRACKET items_2 RCBRACKET"
+    """struct_st : RSTRUCT ID LCBRACKET items_2 RCBRACKET
+    | RSTRUCT ID LCBRACKET items_2 COMMA RCBRACKET"""
     p[0] = NewStruct(p.lineno(1), p.lexpos(1), p[2], p[4])
 
 
 def p_public_struct_st(p):
-    "struct_st : RPUB RSTRUCT ID LCBRACKET items_2 RCBRACKET"
+    """struct_st : RPUB RSTRUCT ID LCBRACKET items_2 RCBRACKET
+    | RPUB RSTRUCT ID LCBRACKET items_2 COMMA RCBRACKET"""
     p[0] = NewStruct(p.lineno(1), p.lexpos(1), p[3], p[5], True)
 
 
@@ -558,6 +585,14 @@ def p_item_2(p):
     | ID COLON ID
     | ID COLON vector_type"""
     p[0] = {"id": p[1], "type": p[3]}
+
+
+def p_item_2_pub(p):
+    """item_2 : RPUB ID COLON primitive_type
+    | RPUB ID COLON array_type
+    | RPUB ID COLON ID
+    | RPUB ID COLON vector_type"""
+    p[0] = {"id": p[2], "type": p[4]}
 
 
 def p_expression(p):
@@ -691,8 +726,15 @@ def p_access(p):
 
 
 def p_expr_struct(p):
-    "expression : ID LCBRACKET items RCBRACKET"
+    """expression : ID LCBRACKET items RCBRACKET
+    | ID LCBRACKET items COMMA RCBRACKET"""
     p[0] = CreateStruct(p.lineno(1), p.lexpos(1), p[1], p[3])
+
+
+def p_expr_struct_2(p):
+    """expression : id_list LCBRACKET items RCBRACKET
+    | id_list LCBRACKET items COMMA RCBRACKET"""
+    p[0] = ModuleStruct(p.lineno(1), p.lexpos(1), p[1], p[3])
 
 
 def p_access_array(p):

@@ -35,6 +35,10 @@ class FunctionCall(Instruction):
                     )
                 elif arg.type == Type.Vector:
                     if isinstance(fn.parameters[i]["type"], dict):
+                        if "::" in fn.parameters[i]["type"]["type"]:
+                            fn.parameters[i]["type"]["type"] = fn.parameters[i]["type"][
+                                "type"
+                            ].split("::")[-1]
                         left_type = getNestedType(fn.parameters[i]["type"])
                     else:
                         left_type = fn.parameters[i]["type"].getNestedType()
@@ -106,7 +110,12 @@ class FunctionCall(Instruction):
                             elif (
                                 return_type == Type.Vector or return_type == Type.Array
                             ):
-                                return_type = retorno["value"].value.getNestedType()
+                                if isinstance(retorno["value"].value.type, dict):
+                                    return_type = getNestedType(
+                                        retorno["value"].value.type
+                                    )
+                                else:
+                                    return_type = retorno["value"].value.getNestedType()
                                 function_type = getNestedType(fn.type)
                             if return_type == function_type:
                                 return Retorno(
