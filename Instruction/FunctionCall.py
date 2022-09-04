@@ -35,10 +35,11 @@ class FunctionCall(Instruction):
                     )
                 elif arg.type == Type.Vector:
                     if isinstance(fn.parameters[i]["type"], dict):
-                        if "::" in fn.parameters[i]["type"]["type"]:
-                            fn.parameters[i]["type"]["type"] = fn.parameters[i]["type"][
-                                "type"
-                            ].split("::")[-1]
+                        if isinstance(fn.parameters[i]["type"]["type"], str):
+                            if "::" in fn.parameters[i]["type"]["type"]:
+                                fn.parameters[i]["type"]["type"] = fn.parameters[i]["type"][
+                                    "type"
+                                ].split("::")[-1]
                         left_type = getNestedType(fn.parameters[i]["type"])
                     else:
                         left_type = fn.parameters[i]["type"].getNestedType()
